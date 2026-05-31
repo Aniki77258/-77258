@@ -1,0 +1,542 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================================
+// User
+// =====================================================================
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          String    @default("visitor") // visitor | candidate | company | headhunter | expert | admin
+  avatar        String?
+  company       String?
+  country       String?
+  industry      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  candidate     Candidate?
+  companyRel    Company?       @relation("UserCompany")
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  sentMessages  Message[]      @relation("SentMessages")
+  receivedMessages Message[]   @relation("ReceivedMessages")
+  sentEmails    EmailLog[]     @relation("SentEmails")
+  receivedEmails EmailLog[]    @relation("ReceivedEmails")
+
+  // Companies created by this user (for company role)
+  createdCompanies Company[]  @relation("CompanyCreator")
+
+  // Jobs posted by this user
+  postedJobs       Job[]
+
+  // Invitations sent/received
+  sentInvitations     Invitation[] @relation("InvitationSender")
+  receivedInvitations Invitation[] @relation("InvitationReceiver")
+
+  // Interview schedules
+  scheduledInterviews Interview[] @relation("InterviewScheduler")
+
+  // Reports submitted (expert)
+  submittedAssessments Assessment[] @relation("AssessmentExpert")
+
+  // SaaS subscriptions
+  subscriptions UserSubscription[]
+  usageLogs     UsageLog[]
+  orders        Order[]
+
+  @@map("users")
+}
+
+// =====================================================================
+// Candidate
+// =====================================================================
+model Candidate {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  name            String
+  email           String?
+  phone           String?
+  title           String?
+  summary         String?
+  country         String?
+  city            String?
+  industry        String?  // wind | lithium | both
+  experienceYears Int      @default(0)
+  currentCompany  String?
+  currentPosition String?
+  education       String?  // JSON string
+  skills          String?  // JSON string - array of skills
+  languages       String?  // JSON string
+  certificates    String?  // JSON string
+  publications    String?  // JSON string
+  patents         String?  // JSON string
+  githubUrl       String?
+  linkedinUrl     String?
+  scholarUrl      String?
+  availability    String?  // immediate | 1month | 3months | not_looking
+  expectedSalary  String?
+  willingRelocate Boolean  @default(false)
+  verified        Boolean  @default(false)
+  score           Int      @default(0) // 0-100 AI radar score
+  rank            Int      @default(0)
+  source          String?  // openalex | github | linkedin | manual
+  lastActiveAt    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User           @relation(fields: [userId], references: [id])
+  invitations     Invitation[]   @relation("InvitationCandidate")
+  interviews      Interview[]
+  assessments     Assessment[]   @relation("AssessmentCandidate")
+  negotiations    Negotiation[]
+  offers          Offer[]
+
+  @@map("candidates")
+}
+
+// =====================================================================
+// Company
+// =====================================================================
+model Company {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  name         String
+  logo         String?
+  description  String?
+  website      String?
+  industry     String?  // wind | lithium | both
+  country      String?
+  city         String?
+  size         String?  // 1-50 | 51-200 | 201-500 | 501-1000 | 1000+
+  verified     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  owner           User          @relation("UserCompany", fields: [userId], references: [id])
+  createdBy       User          @relation("CompanyCreator", fields: [userId], references: [id])
+  jobs            Job[]
+  invitations     Invitation[]  @relation("InvitationCompany")
+  interviews      Interview[]
+
+  @@map("companies")
+}
+
+// =====================================================================
+// Job
+// =====================================================================
+model Job {
+  id           String    @id @default(cuid())
+  title        String
+  description  String?
+  requirements String?   // JSON string
+  location     String?
+  country      String?
+  industry     String?   // wind | lithium | both
+  salaryMin    Int?
+  salaryMax    Int?
+  salaryCurrency String  @default("CNY")
+  type         String    @default("full-time") // full-time | part-time | contract | intern
+  status       String    @default("open")  // open | closed | draft
+  companyId    String
+  postedById   String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  company      Company @relation(fields: [companyId], references: [id])
+  postedBy     User    @relation(fields: [postedById], references: [id])
+  invitations  Invitation[]
+  interviews   Interview[]
+
+  @@map("jobs")
+}
+
+// =====================================================================
+// Invitation
+// =====================================================================
+model Invitation {
+  id           String    @id @default(cuid())
+  candidateId  String
+  jobId        String?
+  companyId    String?
+  senderId     String
+  receiverId   String
+  status       String    @default("pending") // pending | accepted | declined | expired
+  message      String?
+  expiresAt    DateTime?
+  respondedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  candidate    Candidate @relation("InvitationCandidate", fields: [candidateId], references: [id])
+  job          Job?      @relation(fields: [jobId], references: [id])
+  company      Company?  @relation("InvitationCompany", fields: [companyId], references: [id])
+  sender       User      @relation("InvitationSender", fields: [senderId], references: [id])
+  receiver     User      @relation("InvitationReceiver", fields: [receiverId], references: [id])
+
+  @@map("invitations")
+}
+
+// =====================================================================
+// Interview
+// =====================================================================
+model Interview {
+  id           String    @id @default(cuid())
+  candidateId  String
+  jobId        String?
+  companyId    String?
+  scheduledById String
+  interviewer  String?
+  type         String    @default("video") // video | phone | onsite | technical
+  status       String    @default("scheduled") // scheduled | confirmed | completed | cancelled | no_show
+  scheduledAt  DateTime?
+  durationMin  Int       @default(60)
+  location     String?   // physical location or meeting link
+  notes        String?
+  feedback     String?   // JSON string
+  score        Int?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  candidate    Candidate @relation(fields: [candidateId], references: [id])
+  job          Job?      @relation(fields: [jobId], references: [id])
+  company      Company?  @relation(fields: [companyId], references: [id])
+  scheduledBy  User      @relation("InterviewScheduler", fields: [scheduledById], references: [id])
+
+  @@map("interviews")
+}
+
+// =====================================================================
+// Assessment
+// =====================================================================
+model Assessment {
+  id           String    @id @default(cuid())
+  candidateId  String
+  expertId     String?
+  type         String    @default("technical") // technical | behavioral | expert_review | skill_test
+  status       String    @default("pending") // pending | in_progress | completed
+  score        Int?
+  dimensions   String?   // JSON string - [{ name: string, score: number, comment: string }]
+  summary      String?
+  strengths    String?
+  weaknesses   String?
+  recommendation String? // strongly_recommend | recommend | neutral | not_recommend
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  candidate    Candidate @relation("AssessmentCandidate", fields: [candidateId], references: [id])
+  expert       User?     @relation("AssessmentExpert", fields: [expertId], references: [id])
+
+  @@map("assessments")
+}
+
+// =====================================================================
+// Negotiation
+// =====================================================================
+model Negotiation {
+  id           String    @id @default(cuid())
+  candidateId  String
+  jobId        String?
+  offerId      String?
+  status       String    @default("in_progress") // in_progress | agreed | rejected | stalled
+  currentOffer Int?
+  expectedOffer Int?
+  salaryCurrency String  @default("CNY")
+  bonusOffer   Int?
+  equityOffer  String?
+  benefitsOffer String?  // JSON string
+  candidateNotes String?
+  employerNotes  String?
+  rounds       Int       @default(1)
+  nextAction   String?
+  agreedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  candidate    Candidate @relation(fields: [candidateId], references: [id])
+
+  @@map("negotiations")
+}
+
+// =====================================================================
+// Offer
+// =====================================================================
+model Offer {
+  id           String    @id @default(cuid())
+  candidateId  String
+  jobId        String?
+  companyId    String?
+  status       String    @default("draft") // draft | sent | accepted | declined | expired
+  position     String
+  salary       Int
+  salaryCurrency String  @default("CNY")
+  bonus        Int?
+  equity       String?
+  benefits     String?   // JSON string
+  startDate    DateTime?
+  expiresAt    DateTime?
+  message      String?
+  acceptedAt   DateTime?
+  declinedAt   DateTime?
+  declinedReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  candidate    Candidate @relation(fields: [candidateId], references: [id])
+
+  @@map("offers")
+}
+
+// =====================================================================
+// Notification
+// =====================================================================
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("system") // system | invitation | interview | assessment | negotiation | offer | review | risk_alert
+  read      Boolean  @default(false)
+  link      String?
+  metadata  String?  // JSON string: { relatedId, relatedType, triggeredBy, ... }
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+// =====================================================================
+// Message — 站内信 / 会话
+// =====================================================================
+model Message {
+  id           String   @id @default(cuid())
+  conversationId String // 会话ID，同一对用户共享
+  senderId     String
+  receiverId   String
+  subject      String
+  content      String
+  read         Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  sender       User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver     User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@map("messages")
+}
+
+// =====================================================================
+// EmailLog — 邮件发送记录 (Mock)
+// =====================================================================
+model EmailLog {
+  id            String   @id @default(cuid())
+  templateName  String   // invitation | interview_confirm | interview_reschedule | offer | review_pass | review_reject
+  senderId      String
+  receiverId    String
+  receiverEmail String   // mock 地址，非真实邮箱
+  subject       String
+  body          String   // full email body
+  status        String   @default("sent") // sent | failed
+  metadata      String?  // JSON: { candidateId, jobId, offerId, ... }
+  createdAt     DateTime @default(now())
+
+  sender        User     @relation("SentEmails", fields: [senderId], references: [id])
+  receiver      User     @relation("ReceivedEmails", fields: [receiverId], references: [id])
+
+  @@map("email_logs")
+}
+
+// =====================================================================
+// AuditLog
+// =====================================================================
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // create | update | delete | view | export | login | logout
+  resource  String   // candidate | company | job | invitation | interview | etc.
+  resourceId String?
+  detail    String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// =====================================================================
+// SubscriptionPlan — 订阅套餐定义
+// =====================================================================
+model SubscriptionPlan {
+  id          String   @id @default(cuid())
+  planKey     String   @unique   // free | enterprise_basic | enterprise_pro | enterprise_ultimate | headhunter | api_data
+  name        String             // 套餐名称（多语言前端显示）
+  nameEn      String             // 英文名称
+  tier        String             // free | basic | pro | ultimate | headhunter | api
+  targetRole  String   @default("company")  // company | headhunter
+  priceMonthly Int               // 月付价格（CNY 分）
+  priceYearly  Int               // 年付价格（CNY 分）
+  currency    String   @default("CNY")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+
+  // 权益额度（每月重置）
+  maxSearches        Int  @default(30)     // 每月搜索次数
+  maxCandidateViews  Int  @default(10)     // 候选人详情查看次数
+  maxInvitations     Int  @default(5)      // 每月邀请发送次数
+  maxAIReports       Int  @default(3)      // AI 评估报告次数
+  maxContactUnlocks  Int  @default(3)      // 联系方式解锁次数
+  maxTeamMembers     Int  @default(1)      // 团队成员数量
+  maxJobPosts        Int  @default(3)      // 岗位发布数量
+  maxMessages        Int  @default(50)     // 站内信发送数量
+
+  // 附加权益
+  hasAdvancedSearch  Boolean @default(false)  // 高级搜索
+  hasApiAccess       Boolean @default(false)  // API 数据服务
+  hasDedicatedSupport Boolean @default(false) // 专属支持
+  hasCustomReports   Boolean @default(false)  // 自定义报告
+  hasPriorityVerify  Boolean @default(false)  // 优先审核
+
+  description  String?   // 详细描述（JSON）
+  features     String?   // 功能列表（JSON）
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  subscriptions UserSubscription[]
+
+  @@map("subscription_plans")
+}
+
+// =====================================================================
+// UserSubscription — 用户订阅实例
+// =====================================================================
+model UserSubscription {
+  id            String   @id @default(cuid())
+  userId        String
+  planId        String
+  status        String   @default("active")  // active | expired | cancelled | paused | trial
+  billingCycle  String   @default("monthly") // monthly | yearly
+  startDate     DateTime @default(now())
+  endDate       DateTime
+  autoRenew     Boolean  @default(true)
+  trialEndsAt   DateTime?        // 试用期结束时间
+
+  // 当前周期额度使用情况
+  searchesUsed       Int   @default(0)
+  candidateViewsUsed Int   @default(0)
+  invitationsUsed    Int   @default(0)
+  aiReportsUsed      Int   @default(0)
+  contactUnlocksUsed Int   @default(0)
+  messagesUsed       Int   @default(0)
+
+  // 额度重置时间
+  quotaResetAt    DateTime?
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user  User             @relation(fields: [userId], references: [id])
+  plan  SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  @@unique([userId, status])
+  @@map("user_subscriptions")
+}
+
+// =====================================================================
+// UsageLog — 额度使用记录
+// =====================================================================
+model UsageLog {
+  id             String   @id @default(cuid())
+  userId         String
+  subscriptionId String?
+  resource       String   // search | candidate_view | invitation | ai_report | contact_unlock | message
+  action         String   // consume | refund
+  quantity       Int      @default(1)
+  targetId       String?  // 关联的资源 ID（例如候选人ID、搜索ID）
+  metadata       String?  // JSON
+  createdAt      DateTime @default(now())
+
+  user         User              @relation(fields: [userId], references: [id])
+  subscription UserSubscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@map("usage_logs")
+}
+
+// =====================================================================
+// Order — 订单
+// =====================================================================
+model Order {
+  id            String   @id @default(cuid())
+  userId        String
+  planId        String
+  subscriptionId String?  // 升级后的订阅ID
+  type          String   @default("new")  // new | upgrade | renewal
+  billingCycle  String   @default("monthly") // monthly | yearly
+  amount        Int              // 金额（CNY 分）
+  currency      String   @default("CNY")
+  discountCode  String?
+  discountAmount Int     @default(0)
+  finalAmount   Int              // 折后实付金额（分）
+
+  status        String   @default("pending") // pending | paid | failed | refunded | cancelled
+  paymentMethod String?  // stripe | paddle | alipay | wechat_pay | mock
+
+  // 支付信息
+  paidAt        DateTime?
+  paymentRefId  String?  // 支付网关返回的交易ID
+  refundedAt    DateTime?
+  refundAmount  Int?
+  refundReason  String?
+
+  // 发票信息
+  invoiceTitle  String?  // 发票抬头
+  invoiceTaxId  String?  // 税号
+  invoiceEmail  String?  // 发票接收邮箱
+  invoiceSentAt DateTime?
+
+  metadata      String?  // JSON
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user         User              @relation(fields: [userId], references: [id])
+  plan         SubscriptionPlan  @relation(fields: [planId], references: [id])
+  subscription UserSubscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@map("orders")
+}
+
+// =====================================================================
+// PaymentRecord — 支付记录（模拟/真实）
+// =====================================================================
+model PaymentRecord {
+  id          String   @id @default(cuid())
+  orderId     String
+  userId      String
+  method      String   // stripe | paddle | alipay | wechat_pay | mock
+  status      String   @default("pending") // pending | processing | success | failed | refunded
+  amount      Int
+  currency    String   @default("CNY")
+  gatewayRefId String? // 支付网关返回的参考号
+  gatewayResponse String? // JSON - 完整网关响应
+  errorMessage String?
+
+  paidAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  order  Order @relation(fields: [orderId], references: [id])
+  user   User  @relation(fields: [userId], references: [id])
+
+  @@map("payment_records")
+}

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#0ea5e9"/>
+  <text x="256" y="300" font-family="Arial,sans-serif" font-size="140" font-weight="bold" fill="white" text-anchor="middle">WLE</text>
+  <circle cx="256" cy="130" r="45" fill="#38bdf8" opacity="0.8"/>
+  <path d="M200 420 Q256 480 312 420" stroke="#fbbf24" stroke-width="12" fill="none" stroke-linecap="round"/>
+</svg>
