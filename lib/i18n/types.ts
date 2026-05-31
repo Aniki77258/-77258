@@ -101,7 +101,6 @@ export interface TranslationDict {
     hasAccount: string
     registerNow: string
     loginNow: string
-    demoAccounts: string
     enterpriseHR: string
     candidate: string
     admin: string
@@ -134,6 +133,35 @@ export interface TranslationDict {
     recentActivities: string
     demoData: string
     wan: string
+    newToday: string
+    verifiedCandidates: string
+    totalCompanies: string
+    activeHeadhunters: string
+    invitationConversion: string
+    offerConversion: string
+    coreMetrics: string
+    globalTalentRadar: string
+    countryDistribution: string
+    trendCharts: string
+    globalTalentGrowth: string
+    companyActivity: string
+    leaderboards: string
+    hotCountries: string
+    hotSkills: string
+    avgCandidateScore: string
+    recruitmentFunnel: string
+    skillDistribution: string
+    skillRadar: string
+    activityFeed: string
+    dbRealtime: string
+    aiRadarScore: string
+    noActivities: string
+    viewDetail: string
+    viewAnalysis: string
+    reload: string
+    loading: string
+    loadError: string
+    fallbackDemo: string
   }
 
   // Candidates
@@ -303,11 +331,6 @@ export interface TranslationDict {
     hideRead: string
     deleteNotification: string
     filterByType: string
-    triggerDemo: string
-    triggerRunning: string
-    triggerAll: string
-    triggerResult: string
-    demoHint: string
     noNotifications: string
     types: {
       all: string
@@ -485,10 +508,6 @@ export interface TranslationDict {
   // Misc
   misc: {
     processFlow: string
-    demoGuide: string
-    initDemoData: string
-    initSuccess: string
-    demoAccountsTitle: string
     website: string
     copyright: string
     allRightsReserved: string
@@ -519,6 +538,5 @@ export interface TranslationDict {
     paymentMethod: string
     payNow: string
     confirmUpgrade: string
-    disclaimer: string
   }
 }

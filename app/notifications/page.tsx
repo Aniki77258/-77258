@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/lib/auth"
 import { AppLayout } from "@/components/shared/app-sidebar"
-import DemoFlowGuide from "@/components/demo/demo-flow-guide"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -277,10 +276,6 @@ export default function NotificationsPage() {
               </Button>
             )}
           </div>
-        </div>
-
-        <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-          <DemoFlowGuide />
         </div>
 
         {/* Type Filter Tabs */}

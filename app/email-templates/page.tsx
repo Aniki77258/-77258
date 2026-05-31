@@ -260,7 +260,7 @@ export default function EmailTemplatesPage() {
           <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
           <div className="text-xs text-yellow-500/80">
             <p className="font-medium mb-0.5">Mock 模式说明</p>
-            <p>当前邮件系统为模拟模式，所有邮件内容为模板填充演示数据，点击「模拟发送」不会真正发送邮件。</p>
+            <p>当前邮件系统为模板预览模式，未接入真实邮件服务。点击「发送」仅记录操作日志，不会实际发送邮件。</p>
             <p className="mt-1">后续可通过替换 <code className="bg-yellow-500/10 px-1 rounded">lib/services/data-service.ts</code> 中的 <code className="bg-yellow-500/10 px-1 rounded">sendEmail</code> 函数接入 Resend、SendGrid 或 SMTP 服务。</p>
           </div>
         </div>
@@ -361,7 +361,7 @@ export default function EmailTemplatesPage() {
         </Card>
 
         <div className="text-center text-[10px] text-slate-600 pb-8">
-          邮件模板为 Mock 演示数据 • 所有变量填充为示例值 • 未接入真实邮件服务
+          邮件模板预览 • 未接入真实邮件服务
         </div>
       </div>
     </AppLayout>

@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ComplianceNotice } from "@/components/shared/compliance-notice"
-import DemoFlowGuide from "@/components/demo/demo-flow-guide"
 import type { CandidateRecord } from "@/lib/services/data-service"
 
 const NAV_ITEMS = [
@@ -200,11 +199,6 @@ export default function CandidatesPage() {
                   <RefreshCw className="h-3 w-3" />重新加载
                 </button>
               )}
-            </div>
-
-            {/* Demo Flow Guide */}
-            <div className="mt-4 mb-4 p-4 bg-[#0c1830] border border-[#1a2a44] rounded-xl">
-              <DemoFlowGuide />
             </div>
 
             {/* 搜索栏 */}

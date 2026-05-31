@@ -1,5 +1,5 @@
 // Unified Data Service Layer
-// DB-first with Mock fallback for development
+// DB-only — all mock/demo fallback has been removed
 // All pages should use this layer instead of direct Prisma queries
 
 import prisma from "@/lib/prisma"
@@ -11,7 +11,7 @@ import prisma from "@/lib/prisma"
 export interface ServiceResult<T> {
   data: T | null
   error: string | null
-  source: "db" | "mock"
+  source: "db"
   total?: number
 }
 
@@ -275,165 +275,6 @@ function sanitizeCandidateEmail(email: string | null | undefined): string | null
 // Candidates
 // ============================================================
 
-// Mock candidate data for fallback
-const MOCK_CANDIDATES: CandidateRecord[] = [
-  {
-    id: "mock_001",
-    name: "李晓风",
-    email: "l***@mit.edu",
-    title: "风机载荷仿真专家",
-    summary: "MIT 博士，10+年风机载荷仿真经验，发表SCI论文30+篇",
-    country: "美国",
-    city: "波士顿",
-    industry: "wind",
-    experienceYears: 12,
-    currentCompany: "GE Renewable Energy",
-    currentPosition: "Senior Principal Engineer",
-    education: [{ degree: "博士", school: "MIT", major: "航空航天工程" }],
-    skills: ["风机载荷仿真", "CFD计算", "海上风电", "Python"],
-    languages: ["中文(母语)", "英语(流利)"],
-    certificates: [],
-    publications: [],
-    patents: [],
-    githubUrl: "https://github.com/lixf-wind",
-    linkedinUrl: "https://linkedin.com/in/lixf-wind",
-    scholarUrl: null,
-    availability: "1month",
-    expectedSalary: "$180K-$220K",
-    willingRelocate: true,
-    verified: true,
-    score: 96,
-    rank: 1,
-    source: "openalex",
-    createdAt: "2026-01-15T00:00:00.000Z",
-    updatedAt: "2026-05-01T00:00:00.000Z",
-  },
-  {
-    id: "mock_002",
-    name: "张伟",
-    email: "z***@tsinghua.edu.cn",
-    title: "固态电池电解质研发负责人",
-    summary: "清华大学博士，8年固态电池研发经验，多项核心专利",
-    country: "中国",
-    city: "北京",
-    industry: "lithium",
-    experienceYears: 8,
-    currentCompany: "宁德时代",
-    currentPosition: "高级研发经理",
-    education: [{ degree: "博士", school: "清华大学", major: "材料科学与工程" }],
-    skills: ["固态电解质", "锂电池", "电化学", "BMS算法"],
-    languages: ["中文(母语)", "英语(流利)"],
-    certificates: [],
-    publications: [],
-    patents: ["固态电解质制备方法 CN2024XXXXX"],
-    githubUrl: null,
-    linkedinUrl: "https://linkedin.com/in/zhangwei-battery",
-    scholarUrl: null,
-    availability: "3months",
-    expectedSalary: "¥800K-¥1.2M",
-    willingRelocate: false,
-    verified: true,
-    score: 92,
-    rank: 3,
-    source: "manual",
-    createdAt: "2026-02-20T00:00:00.000Z",
-    updatedAt: "2026-05-10T00:00:00.000Z",
-  },
-  {
-    id: "mock_003",
-    name: "M. Schmidt",
-    email: "s***@tum.de",
-    title: "海上风电基础设计专家",
-    summary: "慕尼黑工业大学博士，15年海上风电基础设计经验",
-    country: "德国",
-    city: "慕尼黑",
-    industry: "wind",
-    experienceYears: 15,
-    currentCompany: "Siemens Gamesa",
-    currentPosition: "Chief Engineer - Foundations",
-    education: [{ degree: "博士", school: "TUM", major: "土木工程" }],
-    skills: ["海上风电基础", "单桩设计", "漂浮式", "ABAQUS"],
-    languages: ["德语(母语)", "英语(流利)"],
-    certificates: [],
-    publications: [],
-    patents: [],
-    githubUrl: "https://github.com/mschmidt-offshore",
-    linkedinUrl: null,
-    scholarUrl: null,
-    availability: "immediate",
-    expectedSalary: "€150K-€180K",
-    willingRelocate: true,
-    verified: true,
-    score: 94,
-    rank: 2,
-    source: "openalex",
-    createdAt: "2026-01-10T00:00:00.000Z",
-    updatedAt: "2026-04-28T00:00:00.000Z",
-  },
-  {
-    id: "mock_004",
-    name: "田中一郎",
-    email: "t***@kyoto-u.ac.jp",
-    title: "BMS 电池管理系统首席架构师",
-    summary: "京都大学博士，12年BMS研发经验，松下背景",
-    country: "日本",
-    city: "京都",
-    industry: "lithium",
-    experienceYears: 12,
-    currentCompany: "Panasonic Energy",
-    currentPosition: "BMS Chief Architect",
-    education: [{ degree: "博士", school: "京都大学", major: "电气工程" }],
-    skills: ["BMS架构", "SOC/SOH估算", "嵌入式C", "ISO26262"],
-    languages: ["日语(母语)", "英语(流利)"],
-    certificates: [],
-    publications: [],
-    patents: [],
-    githubUrl: null,
-    linkedinUrl: "https://linkedin.com/in/tanaka-bms",
-    scholarUrl: null,
-    availability: "1month",
-    expectedSalary: "¥15M-¥20M",
-    willingRelocate: true,
-    verified: true,
-    score: 90,
-    rank: 4,
-    source: "manual",
-    createdAt: "2026-03-01T00:00:00.000Z",
-    updatedAt: "2026-05-05T00:00:00.000Z",
-  },
-  {
-    id: "mock_005",
-    name: "E. Johnson",
-    email: "j***@nrel.gov",
-    title: "风储协同控制专家",
-    summary: "Stanford博士，8年风储协同控制与电网集成经验",
-    country: "美国",
-    city: "丹佛",
-    industry: "both",
-    experienceYears: 8,
-    currentCompany: "NREL",
-    currentPosition: "Senior Research Engineer",
-    education: [{ degree: "博士", school: "Stanford", major: "电力电子" }],
-    skills: ["风储协同", "电网集成", "PSCAD", "Python"],
-    languages: ["英语(母语)"],
-    certificates: [],
-    publications: [],
-    patents: [],
-    githubUrl: "https://github.com/ejohnson-windstorage",
-    linkedinUrl: "https://linkedin.com/in/ejohnson-nrel",
-    scholarUrl: null,
-    availability: "1month",
-    expectedSalary: "$160K-$200K",
-    willingRelocate: true,
-    verified: true,
-    score: 88,
-    rank: 5,
-    source: "openalex",
-    createdAt: "2026-02-10T00:00:00.000Z",
-    updatedAt: "2026-05-08T00:00:00.000Z",
-  },
-]
-
 function dbToFrontendCandidate(record: any): CandidateRecord {
   return {
     id: record.id,
@@ -482,7 +323,7 @@ export async function getCandidates(params?: {
   try {
     if (!isServerSide()) {
       // Client-side: use API fetch
-      return { data: MOCK_CANDIDATES, error: null, source: "mock", total: MOCK_CANDIDATES.length }
+      return { data: [], error: null, source: "db", total: 0 }
     }
 
     const { keyword, country, industry, sortBy = "score", sortOrder = "desc", page = 1, pageSize = 20 } = params || {}
@@ -513,29 +354,14 @@ export async function getCandidates(params?: {
     return { data, error: null, source: "db", total }
   } catch (err: any) {
     console.error("[DataService] getCandidates error:", err.message)
-    // Fallback to mock
-    const { keyword, country, industry } = params || {}
-    let filtered = [...MOCK_CANDIDATES]
-    if (keyword) {
-      const kw = keyword.toLowerCase()
-      filtered = filtered.filter(
-        (c) =>
-          c.name.toLowerCase().includes(kw) ||
-          (c.title || "").toLowerCase().includes(kw) ||
-          c.skills.some((s) => s.toLowerCase().includes(kw))
-      )
-    }
-    if (country) filtered = filtered.filter((c) => c.country === country)
-    if (industry) filtered = filtered.filter((c) => c.industry === industry)
-    return { data: filtered, error: null, source: "mock", total: filtered.length }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
 export async function getCandidateById(id: string): Promise<ServiceResult<CandidateRecord>> {
   try {
     if (!isServerSide()) {
-      const found = MOCK_CANDIDATES.find((c) => c.id === id) || null
-      return { data: found, error: found ? null : "Candidate not found", source: "mock" }
+      return { data: null, error: "Candidate not found", source: "db" }
     }
 
     const record = await prisma.candidate.findUnique({ where: { id } })
@@ -543,55 +369,41 @@ export async function getCandidateById(id: string): Promise<ServiceResult<Candid
     return { data: dbToFrontendCandidate(record), error: null, source: "db" }
   } catch (err: any) {
     console.error("[DataService] getCandidateById error:", err.message)
-    const found = MOCK_CANDIDATES.find((c) => c.id === id) || null
-    return { data: found, error: found ? null : "Candidate not found", source: "mock" }
+    return { data: null, error: "Candidate not found", source: "db" }
   }
 }
 
 export async function createCandidate(data: any): Promise<ServiceResult<CandidateRecord>> {
   try {
     if (!isServerSide()) {
-      const mock: CandidateRecord = { id: `mock_${Date.now()}`, ...data, education: [], skills: data.skills || [], languages: [], certificates: [], publications: [], patents: [], verified: false, score: 0, rank: 999, experienceYears: data.experienceYears || 0, willingRelocate: data.willingRelocate || false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-      MOCK_CANDIDATES.unshift(mock)
-      return { data: mock, error: null, source: "mock" }
+      return { data: null, error: "Server-side only", source: "db" }
     }
 
     const record = await prisma.candidate.create({ data })
     return { data: dbToFrontendCandidate(record), error: null, source: "db" }
   } catch (err: any) {
     console.error("[DataService] createCandidate error:", err.message)
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
 export async function updateCandidate(id: string, data: any): Promise<ServiceResult<CandidateRecord>> {
   try {
     if (!isServerSide()) {
-      const idx = MOCK_CANDIDATES.findIndex((c) => c.id === id)
-      if (idx === -1) return { data: null, error: "Not found", source: "mock" }
-      MOCK_CANDIDATES[idx] = { ...MOCK_CANDIDATES[idx], ...data, updatedAt: new Date().toISOString() }
-      return { data: MOCK_CANDIDATES[idx], error: null, source: "mock" }
+      return { data: null, error: "Server-side only", source: "db" }
     }
 
     const record = await prisma.candidate.update({ where: { id }, data })
     return { data: dbToFrontendCandidate(record), error: null, source: "db" }
   } catch (err: any) {
     console.error("[DataService] updateCandidate error:", err.message)
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
 // ============================================================
 // Companies
 // ============================================================
-
-const MOCK_COMPANIES: CompanyRecord[] = [
-  { id: "mock_comp_001", name: "金风科技", description: "全球风电整机龙头企业", website: "https://www.goldwind.com", industry: "wind", country: "中国", city: "乌鲁木齐", size: "1000+", verified: true, createdAt: "2025-01-01T00:00:00.000Z", updatedAt: "2026-05-01T00:00:00.000Z" },
-  { id: "mock_comp_002", name: "中国光伏科技集团", description: "全球领先的光伏与储能解决方案提供商", website: "https://www.cnpv.com", industry: "lithium", country: "中国", city: "北京", size: "1000+", verified: true, createdAt: "2025-01-01T00:00:00.000Z", updatedAt: "2026-05-01T00:00:00.000Z" },
-  { id: "mock_comp_003", name: "Vestas", description: "全球最大风机制造商", website: "https://www.vestas.com", industry: "wind", country: "丹麦", city: "奥胡斯", size: "1000+", verified: true, createdAt: "2024-06-01T00:00:00.000Z", updatedAt: "2026-04-01T00:00:00.000Z" },
-  { id: "mock_comp_004", name: "宁德时代", description: "全球领先的锂离子电池研发制造公司", website: "https://www.catl.com", industry: "lithium", country: "中国", city: "宁德", size: "1000+", verified: true, createdAt: "2024-03-01T00:00:00.000Z", updatedAt: "2026-05-01T00:00:00.000Z" },
-  { id: "mock_comp_005", name: "Siemens Gamesa", description: "全球领先的风力涡轮机制造商", website: "https://www.siemensgamesa.com", industry: "wind", country: "西班牙", city: "萨穆迪奥", size: "1000+", verified: true, createdAt: "2024-01-01T00:00:00.000Z", updatedAt: "2026-04-15T00:00:00.000Z" },
-]
 
 export async function getCompanies(params?: {
   keyword?: string
@@ -602,7 +414,7 @@ export async function getCompanies(params?: {
 }): Promise<ServiceResult<CompanyRecord[]>> {
   try {
     if (!isServerSide()) {
-      return { data: MOCK_COMPANIES, error: null, source: "mock", total: MOCK_COMPANIES.length }
+      return { data: [], error: null, source: "db", total: 0 }
     }
 
     const { keyword, industry, country, page = 1, pageSize = 20 } = params || {}
@@ -636,15 +448,14 @@ export async function getCompanies(params?: {
     return { data, error: null, source: "db", total }
   } catch (err: any) {
     console.error("[DataService] getCompanies error:", err.message)
-    return { data: MOCK_COMPANIES, error: null, source: "mock", total: MOCK_COMPANIES.length }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
 export async function getCompanyById(id: string): Promise<ServiceResult<CompanyRecord>> {
   try {
     if (!isServerSide()) {
-      const found = MOCK_COMPANIES.find((c) => c.id === id) || null
-      return { data: found, error: found ? null : "Company not found", source: "mock" }
+      return { data: null, error: "Company not found", source: "db" }
     }
 
     const record = await prisma.company.findUnique({ where: { id } })
@@ -669,14 +480,13 @@ export async function getCompanyById(id: string): Promise<ServiceResult<CompanyR
     }
   } catch (err: any) {
     console.error("[DataService] getCompanyById error:", err.message)
-    const found = MOCK_COMPANIES.find((c) => c.id === id) || null
-    return { data: found, error: found ? null : "Company not found", source: "mock" }
+    return { data: null, error: "Company not found", source: "db" }
   }
 }
 
 export async function createCompany(data: any): Promise<ServiceResult<CompanyRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.company.create({ data })
     return {
       data: {
@@ -690,21 +500,13 @@ export async function createCompany(data: any): Promise<ServiceResult<CompanyRec
     }
   } catch (err: any) {
     console.error("[DataService] createCompany error:", err.message)
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
 // ============================================================
 // Jobs
 // ============================================================
-
-const MOCK_JOBS: JobRecord[] = [
-  { id: "mock_job_001", title: "海上风电高级工程师", description: "负责海上风电场基础结构设计与优化", requirements: ["10年以上经验", "DNV/API标准"], location: "上海/远程", country: "中国", industry: "wind", salaryMin: 600000, salaryMax: 900000, salaryCurrency: "CNY", type: "full-time", status: "open", companyId: "mock_comp_001", companyName: "金风科技", createdAt: "2026-04-01T00:00:00.000Z", updatedAt: "2026-05-01T00:00:00.000Z" },
-  { id: "mock_job_002", title: "固态电池研发总监", description: "领导固态电池电解质材料研发团队", requirements: ["博士学历", "8年以上经验"], location: "北京", country: "中国", industry: "lithium", salaryMin: 800000, salaryMax: 1500000, salaryCurrency: "CNY", type: "full-time", status: "open", companyId: "mock_comp_002", companyName: "中国光伏科技集团", createdAt: "2026-03-15T00:00:00.000Z", updatedAt: "2026-05-01T00:00:00.000Z" },
-  { id: "mock_job_003", title: "BMS 系统架构师", description: "设计新一代电池管理系统架构", requirements: ["5年以上BMS经验", "ISO26262"], location: "深圳", country: "中国", industry: "lithium", salaryMin: 500000, salaryMax: 800000, salaryCurrency: "CNY", type: "full-time", status: "open", companyId: "mock_comp_004", companyName: "宁德时代", createdAt: "2026-04-10T00:00:00.000Z", updatedAt: "2026-05-01T00:00:00.000Z" },
-  { id: "mock_job_004", title: "风资源评估工程师", description: "负责风电场风资源评估与微观选址", requirements: ["3年以上经验", "WAsP/WindPRO"], location: "北京/哥本哈根", country: "中国", industry: "wind", salaryMin: 300000, salaryMax: 500000, salaryCurrency: "CNY", type: "full-time", status: "open", companyId: "mock_comp_003", companyName: "Vestas", createdAt: "2026-04-20T00:00:00.000Z", updatedAt: "2026-05-01T00:00:00.000Z" },
-  { id: "mock_job_005", title: "储能系统集成工程师", description: "负责大型储能系统设计与集成调试", requirements: ["5年以上经验", "BESS/PCS"], location: "北京", country: "中国", industry: "lithium", salaryMin: 400000, salaryMax: 700000, salaryCurrency: "CNY", type: "full-time", status: "open", companyId: "mock_comp_002", companyName: "中国光伏科技集团", createdAt: "2026-05-01T00:00:00.000Z", updatedAt: "2026-05-01T00:00:00.000Z" },
-]
 
 export async function getJobs(params?: {
   keyword?: string
@@ -717,7 +519,7 @@ export async function getJobs(params?: {
 }): Promise<ServiceResult<JobRecord[]>> {
   try {
     if (!isServerSide()) {
-      return { data: MOCK_JOBS, error: null, source: "mock", total: MOCK_JOBS.length }
+      return { data: [], error: null, source: "db", total: 0 }
     }
 
     const { keyword, industry, country, status, companyId, page = 1, pageSize = 20 } = params || {}
@@ -750,15 +552,14 @@ export async function getJobs(params?: {
     return { data, error: null, source: "db", total }
   } catch (err: any) {
     console.error("[DataService] getJobs error:", err.message)
-    return { data: MOCK_JOBS, error: null, source: "mock", total: MOCK_JOBS.length }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
 export async function getJobById(id: string): Promise<ServiceResult<JobRecord>> {
   try {
     if (!isServerSide()) {
-      const found = MOCK_JOBS.find((j) => j.id === id) || null
-      return { data: found, error: found ? null : "Job not found", source: "mock" }
+      return { data: null, error: "Job not found", source: "db" }
     }
     const record = await prisma.job.findUnique({ where: { id }, include: { company: { select: { name: true } } } })
     if (!record) return { data: null, error: "Job not found", source: "db" }
@@ -776,14 +577,13 @@ export async function getJobById(id: string): Promise<ServiceResult<JobRecord>> 
     }
   } catch (err: any) {
     console.error("[DataService] getJobById error:", err.message)
-    const found = MOCK_JOBS.find((j) => j.id === id) || null
-    return { data: found, error: found ? null : "Job not found", source: "mock" }
+    return { data: null, error: "Job not found", source: "db" }
   }
 }
 
 export async function createJob(data: any): Promise<ServiceResult<JobRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.job.create({ data })
     return {
       data: {
@@ -798,7 +598,7 @@ export async function createJob(data: any): Promise<ServiceResult<JobRecord>> {
     }
   } catch (err: any) {
     console.error("[DataService] createJob error:", err.message)
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
@@ -806,26 +606,10 @@ export async function createJob(data: any): Promise<ServiceResult<JobRecord>> {
 // Dashboard Stats
 // ============================================================
 
-const MOCK_DASHBOARD_STATS: DashboardStats = {
-  totalCandidates: 28453,
-  totalCompanies: 1204,
-  totalJobs: 3412,
-  activeInterviews: 456,
-  totalInvitations: 18290,
-  matchAccuracy: 72.5,
-  newCandidatesToday: 347,
-  verifiedCandidates: 9871,
-  activeHeadhunters: 586,
-  conversionRate: 34.2,
-  offerConversionRate: 21.7,
-  riskAlerts: 395,
-  avgCandidateScore: 68,
-}
-
 export async function getDashboardStats(): Promise<ServiceResult<DashboardStats>> {
   try {
     if (!isServerSide()) {
-      return { data: MOCK_DASHBOARD_STATS, error: null, source: "mock" }
+      return { data: null, error: "Server-side only", source: "db" }
     }
 
     const [
@@ -870,7 +654,7 @@ export async function getDashboardStats(): Promise<ServiceResult<DashboardStats>
     return { data: stats, error: null, source: "db" }
   } catch (err: any) {
     console.error("[DataService] getDashboardStats error:", err.message)
-    return { data: MOCK_DASHBOARD_STATS, error: null, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
@@ -886,7 +670,7 @@ export async function getInvitations(params?: {
   pageSize?: number
 }): Promise<ServiceResult<InvitationRecord[]>> {
   try {
-    if (!isServerSide()) return { data: [], error: null, source: "mock", total: 0 }
+    if (!isServerSide()) return { data: [], error: null, source: "db", total: 0 }
     const { candidateId, companyId, status, page = 1, pageSize = 20 } = params || {}
     const where: any = {}
     if (candidateId) where.candidateId = candidateId
@@ -904,27 +688,27 @@ export async function getInvitations(params?: {
     }
   } catch (err: any) {
     console.error("[DataService] getInvitations error:", err.message)
-    return { data: [], error: null, source: "mock", total: 0 }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
 export async function createInvitation(data: any): Promise<ServiceResult<InvitationRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.invitation.create({ data })
     return { data: { ...record, createdAt: record.createdAt.toISOString(), expiresAt: record.expiresAt?.toISOString?.() ?? null, respondedAt: null } as any, error: null, source: "db" }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
 export async function updateInvitation(id: string, data: any): Promise<ServiceResult<InvitationRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.invitation.update({ where: { id }, data })
     return { data: { ...record, createdAt: record.createdAt.toISOString(), expiresAt: record.expiresAt?.toISOString?.() ?? null, respondedAt: record.respondedAt?.toISOString?.() ?? null } as any, error: null, source: "db" }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
@@ -940,7 +724,7 @@ export async function getInterviews(params?: {
   pageSize?: number
 }): Promise<ServiceResult<InterviewRecord[]>> {
   try {
-    if (!isServerSide()) return { data: [], error: null, source: "mock", total: 0 }
+    if (!isServerSide()) return { data: [], error: null, source: "db", total: 0 }
     const { candidateId, companyId, status, page = 1, pageSize = 20 } = params || {}
     const where: any = {}
     if (candidateId) where.candidateId = candidateId
@@ -964,33 +748,33 @@ export async function getInterviews(params?: {
     }
   } catch (err: any) {
     console.error("[DataService] getInterviews error:", err.message)
-    return { data: [], error: null, source: "mock", total: 0 }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
 export async function createInterview(data: any): Promise<ServiceResult<InterviewRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.interview.create({ data })
     return {
       data: { ...record, feedback: safeJsonParse(record.feedback, null), createdAt: record.createdAt.toISOString(), scheduledAt: record.scheduledAt?.toISOString?.() ?? null, completedAt: null } as any,
       error: null, source: "db",
     }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
 export async function updateInterview(id: string, data: any): Promise<ServiceResult<InterviewRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.interview.update({ where: { id }, data })
     return {
       data: { ...record, feedback: safeJsonParse(record.feedback, null), createdAt: record.createdAt.toISOString(), scheduledAt: record.scheduledAt?.toISOString?.() ?? null, completedAt: record.completedAt?.toISOString?.() ?? null } as any,
       error: null, source: "db",
     }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
@@ -1005,7 +789,7 @@ export async function getAssessments(params?: {
   pageSize?: number
 }): Promise<ServiceResult<AssessmentRecord[]>> {
   try {
-    if (!isServerSide()) return { data: [], error: null, source: "mock", total: 0 }
+    if (!isServerSide()) return { data: [], error: null, source: "db", total: 0 }
     const { candidateId, status, page = 1, pageSize = 20 } = params || {}
     const where: any = {}
     if (candidateId) where.candidateId = candidateId
@@ -1027,20 +811,53 @@ export async function getAssessments(params?: {
     }
   } catch (err: any) {
     console.error("[DataService] getAssessments error:", err.message)
-    return { data: [], error: null, source: "mock", total: 0 }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
 export async function createAssessment(data: any): Promise<ServiceResult<AssessmentRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.assessment.create({ data })
     return {
       data: { ...record, dimensions: safeJsonParse(record.dimensions, []), createdAt: record.createdAt.toISOString(), completedAt: null } as any,
       error: null, source: "db",
     }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
+  }
+}
+
+export async function updateAssessment(id: string, data: any): Promise<ServiceResult<AssessmentRecord>> {
+  try {
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
+    const record = await prisma.assessment.update({ where: { id }, data })
+    return {
+      data: { ...record, dimensions: safeJsonParse(record.dimensions, []), createdAt: record.createdAt.toISOString(), completedAt: record.completedAt?.toISOString?.() ?? null } as any,
+      error: null, source: "db",
+    }
+  } catch (err: any) {
+    return { data: null, error: err.message, source: "db" }
+  }
+}
+
+export async function deleteInterview(id: string): Promise<ServiceResult<boolean>> {
+  try {
+    if (!isServerSide()) return { data: false, error: "Server-side only", source: "db" }
+    await prisma.interview.delete({ where: { id } })
+    return { data: true, error: null, source: "db" }
+  } catch (err: any) {
+    return { data: false, error: err.message, source: "db" }
+  }
+}
+
+export async function deleteAssessment(id: string): Promise<ServiceResult<boolean>> {
+  try {
+    if (!isServerSide()) return { data: false, error: "Server-side only", source: "db" }
+    await prisma.assessment.delete({ where: { id } })
+    return { data: true, error: null, source: "db" }
+  } catch (err: any) {
+    return { data: false, error: err.message, source: "db" }
   }
 }
 
@@ -1055,7 +872,7 @@ export async function getNegotiations(params?: {
   pageSize?: number
 }): Promise<ServiceResult<NegotiationRecord[]>> {
   try {
-    if (!isServerSide()) return { data: [], error: null, source: "mock", total: 0 }
+    if (!isServerSide()) return { data: [], error: null, source: "db", total: 0 }
     const { candidateId, status, page = 1, pageSize = 20 } = params || {}
     const where: any = {}
     if (candidateId) where.candidateId = candidateId
@@ -1072,20 +889,20 @@ export async function getNegotiations(params?: {
     }
   } catch (err: any) {
     console.error("[DataService] getNegotiations error:", err.message)
-    return { data: [], error: null, source: "mock", total: 0 }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
 export async function createNegotiation(data: any): Promise<ServiceResult<NegotiationRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.negotiation.create({ data })
     return {
       data: { ...record, createdAt: record.createdAt.toISOString(), agreedAt: null } as any,
       error: null, source: "db",
     }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
@@ -1100,7 +917,7 @@ export async function getOffers(params?: {
   pageSize?: number
 }): Promise<ServiceResult<OfferRecord[]>> {
   try {
-    if (!isServerSide()) return { data: [], error: null, source: "mock", total: 0 }
+    if (!isServerSide()) return { data: [], error: null, source: "db", total: 0 }
     const { candidateId, status, page = 1, pageSize = 20 } = params || {}
     const where: any = {}
     if (candidateId) where.candidateId = candidateId
@@ -1125,33 +942,33 @@ export async function getOffers(params?: {
     }
   } catch (err: any) {
     console.error("[DataService] getOffers error:", err.message)
-    return { data: [], error: null, source: "mock", total: 0 }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
 export async function createOffer(data: any): Promise<ServiceResult<OfferRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.offer.create({ data })
     return {
       data: { ...record, benefits: safeJsonParse(record.benefits, []), createdAt: record.createdAt.toISOString(), startDate: null, expiresAt: null, acceptedAt: null, declinedAt: null } as any,
       error: null, source: "db",
     }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
 export async function updateOffer(id: string, data: any): Promise<ServiceResult<OfferRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.offer.update({ where: { id }, data })
     return {
       data: { ...record, benefits: safeJsonParse(record.benefits, []), createdAt: record.createdAt.toISOString(), startDate: record.startDate?.toISOString?.() ?? null, expiresAt: record.expiresAt?.toISOString?.() ?? null, acceptedAt: record.acceptedAt?.toISOString?.() ?? null, declinedAt: record.declinedAt?.toISOString?.() ?? null } as any,
       error: null, source: "db",
     }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
@@ -1161,7 +978,7 @@ export async function updateOffer(id: string, data: any): Promise<ServiceResult<
 
 export async function getNotifications(userId: string): Promise<ServiceResult<NotificationRecord[]>> {
   try {
-    if (!isServerSide()) return { data: [], error: null, source: "mock", total: 0 }
+    if (!isServerSide()) return { data: [], error: null, source: "db", total: 0 }
     const records = await prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -1173,60 +990,60 @@ export async function getNotifications(userId: string): Promise<ServiceResult<No
     }
   } catch (err: any) {
     console.error("[DataService] getNotifications error:", err.message)
-    return { data: [], error: null, source: "mock", total: 0 }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
 export async function createNotification(data: any): Promise<ServiceResult<NotificationRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.notification.create({ data })
     return { data: { ...record, createdAt: record.createdAt.toISOString() } as any, error: null, source: "db" }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
 export async function markNotificationRead(id: string): Promise<ServiceResult<NotificationRecord>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     const record = await prisma.notification.update({ where: { id }, data: { read: true } })
     return { data: { ...record, createdAt: record.createdAt.toISOString() } as any, error: null, source: "db" }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
 export async function markAllNotificationsRead(userId: string): Promise<ServiceResult<{ count: number }>> {
   try {
-    if (!isServerSide()) return { data: { count: 0 }, error: null, source: "mock" }
+    if (!isServerSide()) return { data: { count: 0 }, error: null, source: "db" }
     const result = await prisma.notification.updateMany({
       where: { userId, read: false },
       data: { read: true },
     })
     return { data: { count: result.count }, error: null, source: "db" }
   } catch (err: any) {
-    return { data: { count: 0 }, error: err.message, source: "mock" }
+    return { data: { count: 0 }, error: err.message, source: "db" }
   }
 }
 
 export async function deleteNotification(id: string): Promise<ServiceResult<{ id: string }>> {
   try {
-    if (!isServerSide()) return { data: null, error: "Server-side only", source: "mock" }
+    if (!isServerSide()) return { data: null, error: "Server-side only", source: "db" }
     await prisma.notification.delete({ where: { id } })
     return { data: { id }, error: null, source: "db" }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
 export async function getUnreadNotificationCount(userId: string): Promise<ServiceResult<{ count: number }>> {
   try {
-    if (!isServerSide()) return { data: { count: 0 }, error: null, source: "mock" }
+    if (!isServerSide()) return { data: { count: 0 }, error: null, source: "db" }
     const count = await prisma.notification.count({ where: { userId, read: false } })
     return { data: { count }, error: null, source: "db" }
   } catch (err: any) {
-    return { data: { count: 0 }, error: null, source: "mock" }
+    return { data: { count: 0 }, error: null, source: "db" }
   }
 }
 
@@ -1234,43 +1051,10 @@ export async function getUnreadNotificationCount(userId: string): Promise<Servic
 // Messages — 站内信
 // ============================================================
 
-const MOCK_MESSAGES: MessageRecord[] = [
-  { id: "msg_001", conversationId: "conv_hr_lixf", senderId: "u_company_001", receiverId: "u_candidate_001", senderName: "王经理", receiverName: "李晓风", subject: "邀请加入中国光伏科技集团", content: "李晓风先生，您好！\n\n我们关注到您在风机载荷仿真领域的杰出成就，诚邀您加入中国光伏科技集团，担任海上风电高级工程师一职。\n\n期待您的回复。\n\n王经理\n中国光伏科技集团 HR", read: true, createdAt: "2026-05-28T09:00:00.000Z" },
-  { id: "msg_002", conversationId: "conv_hr_lixf", senderId: "u_candidate_001", receiverId: "u_company_001", senderName: "李晓风", receiverName: "王经理", subject: "Re: 邀请加入中国光伏科技集团", content: "王经理，您好！\n\n感谢您的邀请。我对海上风电高级工程师职位很感兴趣，想进一步了解项目详情和团队情况。\n\n期待进一步沟通。\n\n李晓风", read: false, createdAt: "2026-05-29T10:30:00.000Z" },
-  { id: "msg_003", conversationId: "conv_hunter_zhang", senderId: "u_headhunter_001", receiverId: "u_company_001", senderName: "猎头顾问-陈", receiverName: "王经理", subject: "推荐候选人：张伟 - 固态电池电解质专家", content: "王经理，您好！\n\n根据贵司固态电池研发总监的需求，我推荐张伟博士。\n\n背景：清华大学博士，8年固态电池研发经验，宁德时代背景，多项核心专利。\n\n如感兴趣，我可以安排初步沟通。\n\n陈顾问", read: false, createdAt: "2026-05-29T14:00:00.000Z" },
-  { id: "msg_004", conversationId: "conv_admin_notice", senderId: "u_admin_001", receiverId: "u_company_001", senderName: "平台管理员", receiverName: "王经理", subject: "企业认证审核通过通知", content: "尊敬的王经理：\n\n贵司「中国光伏科技集团」的认证审核已通过。现在您可以使用平台的完整功能，包括人才搜索、邀请发送、面试管理等。\n\n如有任何问题，请联系平台客服。\n\n全球风能锂电人才搜索雷达 管理团队", read: false, createdAt: "2026-05-28T16:00:00.000Z" },
-]
-
 export async function getConversations(userId: string): Promise<ServiceResult<ConversationRecord[]>> {
   try {
     if (!isServerSide()) {
-      // Mock conversations from MOCK_MESSAGES
-      const userMsgs = MOCK_MESSAGES.filter(m => m.senderId === userId || m.receiverId === userId)
-      const convMap = new Map<string, ConversationRecord>()
-      for (const msg of userMsgs) {
-        if (!convMap.has(msg.conversationId)) {
-          const otherPerson = msg.senderId === userId
-            ? { id: msg.receiverId, name: msg.receiverName || "Unknown", role: msg.receiverId.startsWith("u_candidate") ? "candidate" : msg.receiverId.startsWith("u_headhunter") ? "headhunter" : "company" }
-            : { id: msg.senderId, name: msg.senderName || "Unknown", role: msg.senderId.startsWith("u_candidate") ? "candidate" : msg.senderId.startsWith("u_headhunter") ? "headhunter" : msg.senderId.startsWith("u_admin") ? "admin" : "company" }
-          convMap.set(msg.conversationId, {
-            conversationId: msg.conversationId,
-            participants: [
-              { id: userId, name: "我", role: "self" },
-              otherPerson,
-            ],
-            lastMessage: msg.content.substring(0, 80) + (msg.content.length > 80 ? "..." : ""),
-            lastMessageAt: msg.createdAt,
-            unreadCount: 0,
-          })
-        }
-        const conv = convMap.get(msg.conversationId)!
-        if (msg.createdAt > conv.lastMessageAt) {
-          conv.lastMessage = msg.content.substring(0, 80) + (msg.content.length > 80 ? "..." : "")
-          conv.lastMessageAt = msg.createdAt
-        }
-        if (!msg.read && msg.receiverId === userId) conv.unreadCount++
-      }
-      return { data: Array.from(convMap.values()).sort((a, b) => b.lastMessageAt.localeCompare(a.lastMessageAt)), error: null, source: "mock" }
+      return { data: [], error: null, source: "db", total: 0 }
     }
 
     // DB: Get all messages for user, aggregate into conversations
@@ -1305,15 +1089,14 @@ export async function getConversations(userId: string): Promise<ServiceResult<Co
     return { data: Array.from(convMap.values()).sort((a, b) => b.lastMessageAt.localeCompare(a.lastMessageAt)), error: null, source: "db" }
   } catch (err: any) {
     console.error("[DataService] getConversations error:", err.message)
-    return { data: [], error: null, source: "mock", total: 0 }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
 export async function getMessages(conversationId: string): Promise<ServiceResult<MessageRecord[]>> {
   try {
     if (!isServerSide()) {
-      const msgs = MOCK_MESSAGES.filter(m => m.conversationId === conversationId).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-      return { data: msgs, error: null, source: "mock", total: msgs.length }
+      return { data: [], error: null, source: "db", total: 0 }
     }
 
     const messages = await prisma.message.findMany({
@@ -1333,8 +1116,7 @@ export async function getMessages(conversationId: string): Promise<ServiceResult
     }
   } catch (err: any) {
     console.error("[DataService] getMessages error:", err.message)
-    const msgs = MOCK_MESSAGES.filter(m => m.conversationId === conversationId)
-    return { data: msgs, error: null, source: "mock", total: msgs.length }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
@@ -1347,15 +1129,7 @@ export async function sendMessage(data: {
 }): Promise<ServiceResult<MessageRecord>> {
   try {
     if (!isServerSide()) {
-      const mock: MessageRecord = {
-        id: `msg_mock_${Date.now()}`,
-        ...data,
-        senderName: data.senderId === "u_company_001" ? "王经理" : "李晓风",
-        receiverName: data.receiverId === "u_company_001" ? "王经理" : "李晓风",
-        read: false,
-        createdAt: new Date().toISOString(),
-      }
-      return { data: mock, error: null, source: "mock" }
+      return { data: null, error: "Server-side only", source: "db" }
     }
     const record = await prisma.message.create({ data })
     return {
@@ -1363,21 +1137,19 @@ export async function sendMessage(data: {
       error: null, source: "db",
     }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
 export async function markMessageRead(id: string): Promise<ServiceResult<MessageRecord>> {
   try {
     if (!isServerSide()) {
-      const msg = MOCK_MESSAGES.find(m => m.id === id)
-      if (msg) msg.read = true
-      return { data: msg || null, error: null, source: "mock" }
+      return { data: null, error: "Server-side only", source: "db" }
     }
     const record = await prisma.message.update({ where: { id }, data: { read: true } })
     return { data: { id: record.id, conversationId: record.conversationId, senderId: record.senderId, receiverId: record.receiverId, subject: record.subject, content: record.content, read: true, createdAt: record.createdAt.toISOString() }, error: null, source: "db" }
   } catch (err: any) {
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
@@ -1585,16 +1357,16 @@ export const EMAIL_TEMPLATES: EmailTemplateRecord[] = [
 ]
 
 export function getEmailTemplates(): ServiceResult<EmailTemplateRecord[]> {
-  return { data: EMAIL_TEMPLATES, error: null, source: "mock", total: EMAIL_TEMPLATES.length }
+  return { data: EMAIL_TEMPLATES, error: null, source: "db", total: EMAIL_TEMPLATES.length }
 }
 
 export function getEmailTemplateByName(name: string): ServiceResult<EmailTemplateRecord | null> {
   const tpl = EMAIL_TEMPLATES.find(t => t.name === name) || null
-  return { data: tpl, error: tpl ? null : "Template not found", source: "mock" }
+  return { data: tpl, error: tpl ? null : "Template not found", source: "db" }
 }
 
 // ============================================================
-// Email Send (Mock)
+// Email Send
 // ============================================================
 
 export async function sendEmail(data: {
@@ -1607,16 +1379,8 @@ export async function sendEmail(data: {
   metadata?: any
 }): Promise<ServiceResult<EmailLogRecord>> {
   try {
-    // Mock delay simulating email sending
     if (!isServerSide()) {
-      const record: EmailLogRecord = {
-        id: `email_mock_${Date.now()}`,
-        ...data,
-        status: "sent",
-        metadata: data.metadata || null,
-        createdAt: new Date().toISOString(),
-      }
-      return { data: record, error: null, source: "mock" }
+      return { data: null, error: "Server-side only", source: "db" }
     }
 
     const record = await prisma.emailLog.create({
@@ -1642,7 +1406,7 @@ export async function sendEmail(data: {
     }
   } catch (err: any) {
     console.error("[DataService] sendEmail error:", err.message)
-    return { data: null, error: err.message, source: "mock" }
+    return { data: null, error: err.message, source: "db" }
   }
 }
 
@@ -1653,7 +1417,7 @@ export async function getEmailLogs(params?: {
   pageSize?: number
 }): Promise<ServiceResult<EmailLogRecord[]>> {
   try {
-    if (!isServerSide()) return { data: [], error: null, source: "mock", total: 0 }
+    if (!isServerSide()) return { data: [], error: null, source: "db", total: 0 }
     const { senderId, receiverId, page = 1, pageSize = 20 } = params || {}
     const where: any = {}
     if (senderId) where.senderId = senderId
@@ -1669,7 +1433,7 @@ export async function getEmailLogs(params?: {
       error: null, source: "db", total,
     }
   } catch (err: any) {
-    return { data: [], error: null, source: "mock", total: 0 }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }
 
@@ -1698,7 +1462,7 @@ export async function getAuditLogs(params?: {
   pageSize?: number
 }): Promise<ServiceResult<AuditLogRecord[]>> {
   try {
-    if (!isServerSide()) return { data: [], error: null, source: "mock", total: 0 }
+    if (!isServerSide()) return { data: [], error: null, source: "db", total: 0 }
     const { page = 1, pageSize = 50 } = params || {}
     const total = await prisma.auditLog.count()
     const records = await prisma.auditLog.findMany({
@@ -1717,53 +1481,6 @@ export async function getAuditLogs(params?: {
     }
   } catch (err: any) {
     console.error("[DataService] getAuditLogs error:", err.message)
-    return { data: [], error: null, source: "mock", total: 0 }
-  }
-}
-
-// ============================================================
-// Seed from mock (import mock candidates into DB)
-// ============================================================
-
-export async function seedCandidatesFromMock(): Promise<{ count: number }> {
-  try {
-    if (!isServerSide()) return { count: 0 }
-    let count = 0
-    for (const mc of MOCK_CANDIDATES) {
-      const existing = await prisma.candidate.findFirst({ where: { name: mc.name } })
-      if (!existing) {
-        await prisma.candidate.create({
-          data: {
-            userId: `seed_${mc.id}`,
-            name: mc.name,
-            title: mc.title,
-            summary: mc.summary,
-            country: mc.country,
-            city: mc.city,
-            industry: mc.industry,
-            experienceYears: mc.experienceYears,
-            currentCompany: mc.currentCompany,
-            currentPosition: mc.currentPosition,
-            education: JSON.stringify(mc.education),
-            skills: JSON.stringify(mc.skills),
-            languages: JSON.stringify(mc.languages),
-            availability: mc.availability,
-            expectedSalary: mc.expectedSalary,
-            willingRelocate: mc.willingRelocate,
-            verified: mc.verified,
-            score: mc.score,
-            rank: mc.rank,
-            source: mc.source,
-            githubUrl: mc.githubUrl,
-            linkedinUrl: mc.linkedinUrl,
-          },
-        })
-        count++
-      }
-    }
-    return { count }
-  } catch (err: any) {
-    console.error("[DataService] seedCandidatesFromMock error:", err.message)
-    return { count: 0 }
+    return { data: [], error: null, source: "db", total: 0 }
   }
 }

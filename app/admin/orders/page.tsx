@@ -5,7 +5,6 @@ import { AppLayout } from "@/components/shared/app-sidebar"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import DemoFlowGuide from "@/components/demo/demo-flow-guide"
 import {
   Receipt, RefreshCw, ArrowLeft, CreditCard, CheckCircle2, XCircle,
   AlertTriangle, RotateCcw, ExternalLink,
@@ -98,11 +97,6 @@ export default function AdminOrdersPage() {
             <RefreshCw className={`w-3 h-3 mr-1 ${loading ? "animate-spin" : ""}`} />
             刷新
           </Button>
-        </div>
-
-        {/* Demo Flow Guide */}
-        <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-          <DemoFlowGuide />
         </div>
 
         {/* Status Filter */}

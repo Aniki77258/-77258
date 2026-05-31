@@ -7,13 +7,10 @@ import { TIMEZONES, convertTime, getDefaultTimezone } from "@/lib/timezone"
 import { COUNTRIES } from "@/lib/countries"
 import { AppLayout } from "@/components/shared/app-sidebar"
 import { ProgressStepper, type Step } from "@/components/shared/progress-stepper"
-import { DemoGuide } from "@/components/shared/demo-guide"
-import { DemoInitButton } from "@/components/shared/demo-guide"
-import DemoFlowGuide from "@/components/demo/demo-flow-guide"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, MapPin, Video, Phone, Building2, User, Briefcase, Check, X, ArrowRight } from "lucide-react"
+import { Calendar, Clock, MapPin, Video, Phone, Building2, User, Briefcase, Check, X, ArrowRight, Plus, Filter, Trash2, ExternalLink } from "lucide-react"
 
 interface InterviewItem {
   id: string
@@ -40,7 +37,15 @@ export default function InterviewsPage() {
   const [candidateTimezone, setCandidateTimezone] = useState(getDefaultTimezone())
   const [companyTimezone, setCompanyTimezone] = useState("Asia/Shanghai")
   const [showTimezoneConverter, setShowTimezoneConverter] = useState(false)
+  const [statusFilter, setStatusFilter] = useState("")
+  const [showCreateForm, setShowCreateForm] = useState(false)
   const isCandidate = user?.role === "candidate"
+
+  // Create form state
+  const [newInterview, setNewInterview] = useState({
+    candidateId: "", jobId: "", companyId: "", type: "video",
+    interviewer: "", scheduledAt: "", durationMin: 60, location: "", notes: ""
+  })
 
   const FLOW_STEPS: Step[] = useMemo(() => [
     { key: "search", label: t("candidates.title", "搜索人才") },
@@ -51,7 +56,7 @@ export default function InterviewsPage() {
     { key: "offer", label: t("nav.offers", "发放Offer") },
   ], [t])
 
-  useEffect(() => { fetchInterviews() }, [user])
+  useEffect(() => { fetchInterviews() }, [user, statusFilter])
 
   async function fetchInterviews() {
     setLoading(true)
@@ -59,9 +64,11 @@ export default function InterviewsPage() {
       const params = new URLSearchParams()
       if (user?.role === "candidate") params.set("candidateId", user.id)
       else if (user?.id) params.set("companyId", user.id)
+      if (statusFilter) params.set("status", statusFilter)
+      params.set("pageSize", "200")
       const res = await fetch(`/api/interviews?${params}`)
       const data = await res.json()
-      if (data.success) setInterviews(data.data || [])
+      if (data.success || data.data) setInterviews(data.data || [])
       else setInterviews(getMockInterviews())
     } catch { setInterviews(getMockInterviews()) }
     finally { setLoading(false) }
@@ -74,7 +81,7 @@ export default function InterviewsPage() {
         body: JSON.stringify({ id, status: newStatus })
       })
       const data = await res.json()
-      if (data.success) {
+      if (data.success || data.data) {
         const messages: Record<string, string> = {
           confirmed: t("interviews.statusConfirmed", "面试已确认"),
           completed: t("interviews.statusCompleted", "面试已完成"),
@@ -88,6 +95,46 @@ export default function InterviewsPage() {
     } catch {
       setInterviews(prev => prev.map(i => i.id === id ? { ...i, status: newStatus } : i))
       setActionMsg(t("misc.initSuccess", "状态已更新(演示模式)"))
+    }
+  }
+
+  async function handleCreateInterview() {
+    if (!user?.id) return
+    try {
+      const body = {
+        ...newInterview,
+        candidateId: newInterview.candidateId || user.id,
+        scheduledById: user.id,
+        companyId: newInterview.companyId || user.id,
+        scheduledAt: newInterview.scheduledAt ? new Date(newInterview.scheduledAt).toISOString() : null,
+        durationMin: Number(newInterview.durationMin),
+      }
+      const res = await fetch("/api/interviews", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (data.data) {
+        setActionMsg(t("common.submit", "面试创建成功"))
+        setShowCreateForm(false)
+        setNewInterview({ candidateId: "", jobId: "", companyId: "", type: "video", interviewer: "", scheduledAt: "", durationMin: 60, location: "", notes: "" })
+        fetchInterviews()
+      } else {
+        setActionMsg(data.error || t("common.submit", "创建失败"))
+      }
+    } catch (err: any) {
+      setActionMsg(err.message)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm(t("common.delete", "确定删除此面试？"))) return
+    try {
+      await fetch(`/api/interviews?id=${id}`, { method: "DELETE" })
+      setActionMsg(t("common.delete", "已删除"))
+      fetchInterviews()
+    } catch {
+      setActionMsg(t("common.submit", "操作失败"))
     }
   }
 
@@ -147,11 +194,6 @@ export default function InterviewsPage() {
                 : (language === "zh" ? "管理与候选人的面试日程" : "Manage interview schedules with candidates")}
             </p>
           </div>
-          <DemoInitButton />
-        </div>
-
-        <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-          <DemoFlowGuide />
         </div>
 
         <ProgressStepper steps={FLOW_STEPS} currentStep="interview" />
@@ -160,14 +202,112 @@ export default function InterviewsPage() {
           <div className="px-4 py-3 rounded-lg text-sm bg-sky-500/10 text-sky-400 border border-sky-500/20">{actionMsg}</div>
         )}
 
-        <DemoGuide
-          title={t("home.moduleInterview", "面试是连接候选人与企业的关键环节")}
-          description={isCandidate
-            ? (language === "zh" ? "查看您的面试安排，确认参加或重新安排时间。" : "View your interview schedule, confirm attendance or reschedule.")
-            : (language === "zh" ? "为候选人安排面试，选择合适的面试形式和时间，并在面试后记录反馈。" : "Schedule interviews for candidates, choose the appropriate format and time, and record feedback after the interview.")}
-          nextLabel={t("nav.assessments", "查看评估报告")}
-          nextHref="/assessments"
-        />
+        {/* Filter + Create bar */}
+        {!isCandidate && (
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-slate-500" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-9 px-3 bg-white/5 border border-white/10 rounded text-white text-sm"
+              >
+                <option value="">{t("common.all", "全部状态")}</option>
+                <option value="scheduled">{t("interviews.statusPending", "待确认")}</option>
+                <option value="confirmed">{t("interviews.statusConfirmed", "已确认")}</option>
+                <option value="completed">{t("interviews.statusCompleted", "已完成")}</option>
+                <option value="cancelled">{t("interviews.statusCancelled", "已取消")}</option>
+              </select>
+            </div>
+            <Button onClick={() => setShowCreateForm(!showCreateForm)} className="bg-sky-600 hover:bg-sky-700 ml-auto">
+              <Plus className="w-4 h-4 mr-1" /> {language === "zh" ? "安排面试" : "Schedule Interview"}
+            </Button>
+          </div>
+        )}
+
+        {/* Create Interview Form */}
+        {!isCandidate && showCreateForm && (
+          <Card className="bg-white/5 border-sky-500/20">
+            <CardContent className="p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-white">{language === "zh" ? "安排新面试" : "Schedule New Interview"}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-slate-400 mb-1 block">{language === "zh" ? "候选人ID" : "Candidate ID"}</label>
+                  <input
+                    value={newInterview.candidateId}
+                    onChange={(e) => setNewInterview({ ...newInterview, candidateId: e.target.value })}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm"
+                    placeholder="cuid..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 mb-1 block">{t("interviews.interviewer", "面试官")}</label>
+                  <input
+                    value={newInterview.interviewer}
+                    onChange={(e) => setNewInterview({ ...newInterview, interviewer: e.target.value })}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 mb-1 block">{language === "zh" ? "面试类型" : "Type"}</label>
+                  <select
+                    value={newInterview.type}
+                    onChange={(e) => setNewInterview({ ...newInterview, type: e.target.value })}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm"
+                  >
+                    <option value="video">{typeLabel("video")}</option>
+                    <option value="phone">{typeLabel("phone")}</option>
+                    <option value="onsite">{typeLabel("onsite")}</option>
+                    <option value="technical">{typeLabel("technical")}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 mb-1 block">{language === "zh" ? "时长(分钟)" : "Duration (min)"}</label>
+                  <input
+                    type="number"
+                    value={newInterview.durationMin}
+                    onChange={(e) => setNewInterview({ ...newInterview, durationMin: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 mb-1 block">{language === "zh" ? "面试时间" : "Scheduled At"}</label>
+                  <input
+                    type="datetime-local"
+                    value={newInterview.scheduledAt}
+                    onChange={(e) => setNewInterview({ ...newInterview, scheduledAt: e.target.value })}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 mb-1 block">{t("interviews.location", "地点")}</label>
+                  <input
+                    value={newInterview.location}
+                    onChange={(e) => setNewInterview({ ...newInterview, location: e.target.value })}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs text-slate-400 mb-1 block">{language === "zh" ? "备注" : "Notes"}</label>
+                  <textarea
+                    value={newInterview.notes}
+                    onChange={(e) => setNewInterview({ ...newInterview, notes: e.target.value })}
+                    rows={2}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded text-white text-sm resize-none"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleCreateInterview} className="bg-sky-600 hover:bg-sky-700">
+                  <Check className="w-3 h-3 mr-1" /> {t("common.submit", "创建")}
+                </Button>
+                <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+                  <X className="w-3 h-3 mr-1" /> {t("common.cancel", "取消")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Timezone Conversion Section */}
         <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
@@ -237,12 +377,12 @@ export default function InterviewsPage() {
         ) : (
           <div className="space-y-3">
             {interviews.map((inv) => (
-              <Card key={inv.id} className="bg-white/5 border-white/10">
+              <Card key={inv.id} className="bg-white/5 border-white/10 group">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-2 cursor-pointer" onClick={() => window.location.href = `/interviews/${inv.id}`}>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-white font-medium">{inv.candidate?.name || t("candidates.title", "候选人")}</span>
+                        <span className="text-white font-medium group-hover:text-sky-400 transition">{inv.candidate?.name || t("candidates.title", "候选人")}</span>
                         {statusBadge(inv.status)}
                       </div>
                       <div className="flex flex-wrap gap-3 text-slate-400 text-xs">
@@ -273,8 +413,7 @@ export default function InterviewsPage() {
                           <MapPin className="w-3 h-3" /> {t("interviews.location", "地点")}: {inv.location}
                         </div>
                       )}
-                      {inv.notes && <p className="text-slate-400 text-xs bg-white/5 p-2 rounded">{inv.notes}</p>}
-                      {inv.feedback && <p className="text-slate-300 text-xs bg-white/5 p-2 rounded">{t("assessments.suggestion", "反馈")}: {inv.feedback}</p>}
+                      {inv.notes && <p className="text-slate-400 text-xs bg-white/5 p-2 rounded line-clamp-2">{inv.notes}</p>}
                       {inv.score != null && (
                         <p className="text-sm">
                           <span className="text-slate-400">{t("assessments.score", "评分")}：</span>
@@ -282,24 +421,42 @@ export default function InterviewsPage() {
                         </p>
                       )}
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      {!isCandidate && inv.status === "scheduled" && (
-                        <>
-                          <Button size="sm" onClick={() => handleStatusChange(inv.id, "completed")} className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30">
-                            <Check className="w-3 h-3 mr-1" /> {t("interviews.statusCompleted", "标记完成")}
-                          </Button>
-                          <Button size="sm" onClick={() => handleStatusChange(inv.id, "cancelled")} className="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30">
-                            <X className="w-3 h-3 mr-1" /> {t("common.cancel", "取消")}
-                          </Button>
-                        </>
-                      )}
-                      {isCandidate && inv.status === "scheduled" && (
-                        <>
-                          <Button size="sm" onClick={() => handleStatusChange(inv.id, "confirmed")} className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30">
+                    <div className="flex gap-2 flex-shrink-0 flex-col items-end">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => window.location.href = `/interviews/${inv.id}`}
+                          className="p-1.5 rounded hover:bg-sky-500/10 text-slate-500 hover:text-sky-400 transition"
+                          title={language === "zh" ? "查看详情" : "View Details"}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                        {!isCandidate && (
+                          <button
+                            onClick={() => handleDelete(inv.id)}
+                            className="p-1.5 rounded hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition"
+                            title={t("common.delete", "删除")}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        {!isCandidate && inv.status === "scheduled" && (
+                          <>
+                            <Button size="sm" onClick={() => handleStatusChange(inv.id, "completed")} className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 h-7 text-xs">
+                              <Check className="w-3 h-3 mr-1" /> {t("interviews.statusCompleted", "标记完成")}
+                            </Button>
+                            <Button size="sm" onClick={() => handleStatusChange(inv.id, "cancelled")} className="bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 h-7 text-xs">
+                              <X className="w-3 h-3 mr-1" /> {t("common.cancel", "取消")}
+                            </Button>
+                          </>
+                        )}
+                        {isCandidate && inv.status === "scheduled" && (
+                          <Button size="sm" onClick={() => handleStatusChange(inv.id, "confirmed")} className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 h-7 text-xs">
                             <Check className="w-3 h-3 mr-1" /> {t("common.confirm", "确认参加")}
                           </Button>
-                        </>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>

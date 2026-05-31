@@ -4,8 +4,6 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth"
 import { AppLayout } from "@/components/shared/app-sidebar"
 import { ProgressStepper, type Step } from "@/components/shared/progress-stepper"
-import { DemoGuide } from "@/components/shared/demo-guide"
-import DemoFlowGuide from "@/components/demo/demo-flow-guide"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -114,10 +112,6 @@ export default function InvitationsPage() {
           </div>
         </div>
 
-        <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-          <DemoFlowGuide />
-        </div>
-
         <ProgressStepper steps={FLOW_STEPS} currentStep={currentStep} />
 
         {actionMsg && (
@@ -129,13 +123,6 @@ export default function InvitationsPage() {
             {actionMsg}
           </div>
         )}
-
-        <DemoGuide
-          title={isCandidate ? "查看企业发给您的人才邀请" : "向优秀候选人发起人才邀请"}
-          description={isCandidate ? "在这里可以查看、接受或拒绝来自企业的邀请。接受后流程将进入面试阶段。" : "找到心仪的候选人后，点击发起邀请，撰写一段真诚的邀请语，等待候选人回复。"}
-          nextLabel={isCandidate ? "查看面试安排" : "安排面试"}
-          nextHref="/interviews"
-        />
 
         {loading ? (
           <div className="flex items-center justify-center py-20">

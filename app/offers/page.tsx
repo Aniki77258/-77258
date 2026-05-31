@@ -6,8 +6,6 @@ import { useLanguage } from "@/lib/i18n"
 import { formatCurrency, CURRENCY_LIST, CurrencyCode } from "@/lib/format-currency"
 import { AppLayout } from "@/components/shared/app-sidebar"
 import { ProgressStepper, type Step } from "@/components/shared/progress-stepper"
-import { DemoGuide } from "@/components/shared/demo-guide"
-import DemoFlowGuide from "@/components/demo/demo-flow-guide"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -127,10 +125,6 @@ export default function OffersPage() {
           <span className="text-[10px] text-slate-600 ml-2">{t('offers.exchangeRateNote')}</span>
         </div>
 
-        <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-          <DemoFlowGuide />
-        </div>
-
         <ProgressStepper steps={FLOW_STEPS} currentStep="offer" />
 
         {actionMsg && (
@@ -140,14 +134,6 @@ export default function OffersPage() {
               : "bg-sky-500/10 text-sky-400 border border-sky-500/20"
           }`}>{actionMsg}</div>
         )}
-
-        <DemoGuide
-          title={language === 'zh' ? "Offer 阶段 — 招聘流程的最后一步" : "Offer Stage — Final step"}
-          description={isCandidate
-            ? (language === 'zh' ? "查看企业发给您的 Offer，确认薪资、福利和入职日期，选择接受或拒绝。" : "Review offers, confirm salary, benefits, and start date. Accept or decline.")
-            : (language === 'zh' ? "创建正式 Offer 并发送给候选人，包含完整的薪酬包和入职信息。" : "Create and send official offers with complete compensation packages.")
-          }
-        />
 
         {loading ? (
           <div className="flex items-center justify-center py-20">

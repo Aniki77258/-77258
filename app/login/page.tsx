@@ -4,21 +4,16 @@ import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/auth"
 import { useLanguage } from "@/lib/i18n"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Eye, EyeOff, LogIn, UserPlus, Users, Building2, Shield, Rocket } from "lucide-react"
-
-const DEMO_ACCOUNTS = [
-  { roleKey: "auth.enterpriseHR", email: "hr@demo-solar.cn", password: "company123", icon: Building2, color: "text-blue-400", desc: "张明辉 - 光伏科技集团HR" },
-  { roleKey: "auth.candidate", email: "lixiaofeng@demo-tech.org", password: "candidate123", icon: Users, color: "text-emerald-400", desc: "李晓风 - 风电工程师" },
-  { roleKey: "auth.admin", email: "admin@globaltalentradar.com", password: "admin123", icon: Shield, color: "text-amber-400", desc: "系统管理员" },
-]
+import { GlobalRadarMap } from "@/components/tech/global-radar-map"
+import { EnergyBadge } from "@/components/tech/energy-badge"
+import { Eye, EyeOff, LogIn, UserPlus, Radar, Globe } from "lucide-react"
 
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
-        <div className="w-8 h-8 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+      <main className="min-h-screen bg-deep-space flex items-center justify-center px-4">
+        <div className="w-8 h-8 border-2 border-[#38bdf8] border-t-transparent rounded-full animate-spin" />
       </main>
     }>
       <LoginForm />
@@ -38,32 +33,14 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [demoInitMsg, setDemoInitMsg] = useState("")
-  const [demoInitLoading, setDemoInitLoading] = useState(false)
 
-  async function initDemoData() {
-    setDemoInitLoading(true)
-    setDemoInitMsg("")
-    try {
-      const res = await fetch("/api/demo/init", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) })
-      const data = await res.json()
-      if (data.success) {
-        setDemoInitMsg(data.message)
-      } else {
-        setDemoInitMsg("初始化失败: " + (data.message || "未知错误"))
-      }
-    } catch (e: any) {
-      setDemoInitMsg("网络错误: " + (e.message || ""))
-    } finally {
-      setDemoInitLoading(false)
-    }
-  }
+  const isZh = language === 'zh'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
     if (!email || !password) {
-      setError(language === 'zh' ? '请输入邮箱和密码' : 'Please enter email and password')
+      setError(isZh ? '请输入邮箱和密码' : 'Please enter email and password')
       return
     }
     setIsLoading(true)
@@ -76,172 +53,193 @@ function LoginForm() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
-      setError((language === 'zh' ? '登录失败: ' : 'Login failed: ') + msg)
+      setError((isZh ? '登录失败: ' : 'Login failed: ') + msg)
     } finally {
       setIsLoading(false)
     }
   }
 
-  function fillDemoAccount(acc: typeof DEMO_ACCOUNTS[number]) {
-    setEmail(acc.email)
-    setPassword(acc.password)
-    setError("")
-  }
-
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
-        {/* Language Switcher */}
-        <div className="flex justify-end">
-          <button
-            onClick={toggleLanguage}
-            className="px-3 py-1 text-xs rounded border border-white/10 text-slate-400 hover:text-white hover:border-white/30 transition-colors"
-          >
-            {language === 'zh' ? '🌐 English' : '🌐 中文'}
-          </button>
+    <main className="min-h-screen bg-deep-space flex">
+      {/* Left: Tech Visual */}
+      <div className="hidden lg:flex lg:w-[45%] xl:w-[50%] relative overflow-hidden items-center justify-center">
+        {/* Background glow */}
+        <div className="absolute inset-0">
+          <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full blur-[120px] opacity-[0.06]"
+            style={{ background: "radial-gradient(circle, #38bdf8, transparent 70%)" }} />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] opacity-[0.04]"
+            style={{ background: "radial-gradient(circle, #a78bfa, transparent 70%)" }} />
         </div>
 
-        {/* Logo */}
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 mb-4">
-            <LogIn className="w-7 h-7 text-white" />
+        <div className="relative z-10 w-full max-w-lg px-12 text-center">
+          {/* Logo */}
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-[#38bdf8] to-[#0ea5e9] mb-8 shadow-[0_0_40px_rgba(56,189,248,0.2)]">
+            <Radar className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">{t('home.title')}</h1>
-          <p className="text-slate-400 text-sm mt-2">{t('home.subtitle')}</p>
-        </div>
 
-        {/* Login Form */}
-        <Card className="bg-white/5 border border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">{t('auth.login')}</CardTitle>
-            <CardDescription>
-              {language === 'zh' ? '使用您的账号登录平台' : 'Sign in to your account'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">
-                  {error}
-                </div>
-              )}
-              <div>
-                <label className="block text-white/80 text-sm mb-1.5 font-medium">{t('auth.email')}</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all"
-                  disabled={isLoading}
-                />
+          <h1 className="text-2xl font-bold text-white mb-3">
+            {isZh ? "全球风能锂电人才搜索雷达" : "Global Wind & Lithium Talent Radar"}
+          </h1>
+          <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+            {isZh
+              ? "AI 驱动的全球新能源人才搜索平台。连接风能、锂电、储能行业高端人才与企业机会。"
+              : "AI-powered global clean energy talent platform. Connecting top talent with opportunities in wind, lithium, and energy storage."}
+          </p>
+
+          {/* Mini radar visual */}
+          <div className="mb-6">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Globe className="w-4 h-4 text-[#38bdf8]" />
+              <span className="text-xs text-slate-400 uppercase tracking-wider">
+                {isZh ? "全球人才信号" : "Global Talent Signals"}
+              </span>
+            </div>
+            <GlobalRadarMap compact showConnections={false} />
+            <p className="text-[10px] text-slate-600 mt-2">{isZh ? "示例数据展示" : "Demo data display"}</p>
+          </div>
+
+          {/* Key metrics preview */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { value: "28K+", label: isZh ? "候选人" : "Candidates", color: "text-[#38bdf8]" },
+              { value: "1.2K+", label: isZh ? "企业" : "Companies", color: "text-[#4ade80]" },
+              { value: "72%", label: isZh ? "匹配精度" : "Match Accuracy", color: "text-[#a78bfa]" },
+            ].map((m, i) => (
+              <div key={i} className="text-center">
+                <p className={`text-lg font-bold ${m.color}`}>{m.value}</p>
+                <p className="text-[10px] text-slate-500">{m.label}</p>
               </div>
-              <div>
-                <label className="block text-white/80 text-sm mb-1.5 font-medium">{t('auth.password')}</label>
-                <div className="relative">
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Login Form */}
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md space-y-6">
+          {/* Language Switcher */}
+          <div className="flex justify-end">
+            <button
+              onClick={toggleLanguage}
+              className="px-3 py-1 text-xs rounded-lg border border-white/10 text-slate-400 hover:text-white hover:border-white/30 transition-all"
+            >
+              {language === 'zh' ? 'EN' : '中文'}
+            </button>
+          </div>
+
+          {/* Mobile Logo (visible only on small screens) */}
+          <div className="lg:hidden text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-[#38bdf8] to-[#0ea5e9] mb-4">
+              <Radar className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-white">{isZh ? "全球风能锂电人才搜索雷达" : "Global Wind & Lithium Talent Radar"}</h1>
+            <p className="text-slate-400 text-xs mt-1">{isZh ? "AI 驱动的人才搜索平台" : "AI-Powered Talent Platform"}</p>
+          </div>
+
+          {/* Login Form Card */}
+          <div className="glass-card glow-border">
+            {/* Header */}
+            <div className="px-6 pt-6 pb-2">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <LogIn className="w-5 h-5 text-[#38bdf8]" />
+                {t('auth.login')}
+              </h2>
+              <p className="text-sm text-slate-400 mt-1">
+                {isZh ? '使用您的账号登录平台' : 'Sign in to your account'}
+              </p>
+            </div>
+
+            {/* Form */}
+            <div className="px-6 pb-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                  <div className="bg-[#f87171]/10 border border-[#f87171]/30 text-[#f87171] text-sm px-4 py-3 rounded-lg flex items-start gap-2">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#f87171] mt-1.5 flex-shrink-0" />
+                    {error}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-white/80 text-sm mb-1.5 font-medium">{t('auth.email')}</label>
                   <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500/50 transition-all pr-11"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="input-tech"
                     disabled={isLoading}
                   />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
                 </div>
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-medium py-2.5"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    {t('common.loading')}
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <LogIn className="w-4 h-4" />
-                    {t('auth.loginButton')}
-                  </span>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex justify-center border-t border-white/5 pt-4">
-            <p className="text-slate-400 text-sm">
-              {t('auth.noAccount')}{" "}
-              <a href="/register" className="text-sky-400 hover:text-sky-300 hover:underline transition-colors">
-                {t('auth.registerNow')} <UserPlus className="w-3 h-3 inline" />
-              </a>
-            </p>
-          </CardFooter>
-        </Card>
 
-        {/* Demo Accounts */}
-        <Card className="bg-white/5 border border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white text-base flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              {t('auth.demoAccounts')} ({language === 'zh' ? '点击快速填充' : 'Click to fill'})
-            </CardTitle>
-            <CardDescription>
-              {language === 'zh'
-                ? 'Demo 演示专用账号，可直接登录体验完整招聘流程'
-                : 'Demo accounts for testing the full recruitment workflow'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {DEMO_ACCOUNTS.map((acc) => (
-              <button
-                key={acc.email}
-                onClick={() => fillDemoAccount(acc)}
-                className="w-full flex items-center gap-3 p-3 rounded-lg border border-white/5 hover:border-sky-500/30 hover:bg-sky-500/5 transition-all text-left group"
-              >
-                <div className={`${acc.color} bg-white/5 p-2 rounded-lg group-hover:scale-110 transition-transform`}>
-                  <acc.icon className="w-5 h-5" />
+                <div>
+                  <label className="block text-white/80 text-sm mb-1.5 font-medium">{t('auth.password')}</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="input-tech pr-11"
+                      disabled={isLoading}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium">{t(acc.roleKey)}</p>
-                  <p className="text-slate-400 text-xs truncate">{acc.email}</p>
-                </div>
-                <div className="text-slate-500 text-xs font-mono bg-white/5 px-2 py-1 rounded">
-                  {acc.password}
-                </div>
-              </button>
-            ))}
-          </CardContent>
-          <CardFooter className="flex flex-col gap-2 border-t border-white/5 pt-4">
-            <Button
-              onClick={initDemoData}
-              disabled={demoInitLoading}
-              variant="outline"
-              className="w-full border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
-            >
-              {demoInitLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
-                  {language === 'zh' ? '初始化中...' : 'Initializing...'}
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Rocket className="w-4 h-4" />
-                  {language === 'zh' ? '一键初始化演示数据' : 'Initialize Demo Data'}
-                </span>
-              )}
-            </Button>
-            {demoInitMsg && (
-              <p className="text-xs text-emerald-400 text-center px-2">{demoInitMsg}</p>
-            )}
-          </CardFooter>
-        </Card>
+
+                <button
+                  type="submit"
+                  className="btn-energy w-full !py-2.5 text-base"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      {t('common.loading')}
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <LogIn className="w-4 h-4" />
+                      {t('auth.loginButton')}
+                    </span>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 pb-6 pt-2">
+              <div className="divider-tech mb-3" />
+
+              {/* Demo account hint */}
+              <div className="mb-3 p-3 rounded-lg bg-[#38bdf8]/5 border border-[#38bdf8]/10">
+                <p className="text-xs text-slate-400">
+                  <span className="text-[#22d3ee] font-semibold">{isZh ? "演示账号" : "Demo Accounts"}:</span>
+                  <span className="ml-2">{isZh ? "admin/123456 或 boss/123456" : "admin/123456 or boss/123456"}</span>
+                </p>
+              </div>
+
+              <p className="text-center text-slate-500 text-sm">
+                {t('auth.noAccount')}{" "}
+                <a href="/register" className="text-[#38bdf8] hover:text-[#22d3ee] hover:underline transition-colors font-medium">
+                  {t('auth.registerNow')} <UserPlus className="w-3 h-3 inline" />
+                </a>
+              </p>
+            </div>
+          </div>
+
+          {/* Back to home */}
+          <p className="text-center">
+            <a href="/" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
+              {isZh ? "← 返回首页" : "← Back to Home"}
+            </a>
+          </p>
+        </div>
       </div>
     </main>
   )

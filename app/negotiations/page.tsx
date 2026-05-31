@@ -6,8 +6,6 @@ import { useLanguage } from "@/lib/i18n"
 import { formatCurrency, formatSalaryRange, CURRENCY_LIST, CurrencyCode, convertCurrency } from "@/lib/format-currency"
 import { AppLayout } from "@/components/shared/app-sidebar"
 import { ProgressStepper, type Step } from "@/components/shared/progress-stepper"
-import { DemoGuide } from "@/components/shared/demo-guide"
-import DemoFlowGuide from "@/components/demo/demo-flow-guide"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -97,10 +95,6 @@ export default function NegotiationsPage() {
           <p className="text-slate-400 text-sm mt-1">{t("negotiations.description")}</p>
         </div>
 
-        <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-          <DemoFlowGuide />
-        </div>
-
         <ProgressStepper steps={FLOW_STEPS} currentStep="negotiate" />
 
         {actionMsg && (
@@ -118,13 +112,6 @@ export default function NegotiationsPage() {
             ))}
           </select>
         </div>
-
-        <DemoGuide
-          title={t("negotiations.demoTitle")}
-          description={t("negotiations.demoDescription")}
-          nextLabel={t("common.createOffer")}
-          nextHref="/offers"
-        />
 
         {loading ? (
           <div className="flex items-center justify-center py-20">

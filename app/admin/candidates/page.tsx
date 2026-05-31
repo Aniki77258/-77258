@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { AppLayout } from "@/components/shared/app-sidebar"
-import DemoFlowGuide from "@/components/demo/demo-flow-guide"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -69,10 +68,6 @@ export default function AdminCandidatesPage() {
             <UserCheck className="w-6 h-6 text-emerald-400" /> 候选人资料审核
           </h1>
           <p className="text-slate-400 text-sm mt-1">审核候选人提交的资料完整性和真实性</p>
-        </div>
-
-        <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-          <DemoFlowGuide />
         </div>
 
         <div className="flex gap-2">
