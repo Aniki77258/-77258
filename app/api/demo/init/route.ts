@@ -1,13 +1,41 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+// Mock demo stats for serverless environments without DATABASE_URL
+const MOCK_DEMO_STATS = {
+  candidates: 5,
+  companies: 2,
+  jobs: 4,
+  invitations: 5,
+  interviews: 3,
+  assessments: 2,
+  negotiations: 2,
+  offers: 2,
+  messages: 8,
+  notifications: 12,
+  auditLogs: 10,
+}
+
 // Powerful demo data initializer — creates a complete end-to-end recruitment workflow
 // Idempotent: safe to call multiple times (upsert everywhere)
+// Falls back to Mock mode when DATABASE_URL is not configured (e.g. Vercel serverless)
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}))
     const forceReset = body.forceReset === true
 
+    // ========== Mock Mode: No database configured ==========
+    if (!process.env.DATABASE_URL) {
+      console.log("[DemoInit] DATABASE_URL not set — running in Mock mode")
+      return NextResponse.json({
+        success: true,
+        message: `演示数据初始化完成（Mock模式，无需数据库）！已模拟 ${MOCK_DEMO_STATS.candidates} 位候选人、${MOCK_DEMO_STATS.companies} 家企业、${MOCK_DEMO_STATS.jobs} 个职位、${MOCK_DEMO_STATS.invitations} 个邀请、${MOCK_DEMO_STATS.interviews} 场面试、${MOCK_DEMO_STATS.offers} 个Offer。\n\n💡 提示：在 Vercel 添加 "Vercel Postgres" 集成即可使用真实数据库模式。`,
+        data: MOCK_DEMO_STATS,
+        demoFlow: getMockDemoFlowSteps(),
+      })
+    }
+
+    // ========== Real DB Mode ==========
     // Check if demo data already exists
     const existingCandidates = await prisma.candidate.count()
     if (!forceReset && existingCandidates >= 5) {
@@ -410,7 +438,7 @@ async function getDemoStats() {
   }
 }
 
-// Helper: define the demo flow steps for UI guidance
+// Helper: define the demo flow steps for UI guidance (real DB mode)
 function getDemoFlowSteps() {
   return [
     { step: 1, role: "company", action: "登录企业账号", description: "使用 hr@demo-solar.cn / company123 登录", status: "pending" },
@@ -423,5 +451,21 @@ function getDemoFlowSteps() {
     { step: 8, role: "company", action: "发送正式Offer", description: "向候选人发送正式录用通知书", status: "in_progress" },
     { step: 9, role: "candidate", action: "接受Offer", description: "候选人确认接受录用", status: "pending" },
     { step: 10, role: "admin", action: "管理员审核", description: "审核企业认证和候选人资料", status: "pending" },
+  ]
+}
+
+// Helper: define mock demo flow steps for serverless mode (no DB required)
+function getMockDemoFlowSteps() {
+  return [
+    { step: 1, role: "company", action: "初始化演示数据", description: "演示数据已通过 Mock 模式加载（无需数据库）", status: "completed" },
+    { step: 2, role: "company", action: "浏览候选人列表", description: "访问 /candidates 查看5位高匹配风能/锂电候选人", status: "completed" },
+    { step: 3, role: "company", action: "查看邀请记录", description: "访问 /invitations 查看5条邀请（3接受+1待定+1拒绝）", status: "completed" },
+    { step: 4, role: "company", action: "查看面试安排", description: "访问 /interviews 查看3场面试（2完成+1待进行）", status: "completed" },
+    { step: 5, role: "company", action: "查看评估报告", description: "访问 /assessments 查看2份候选人技术评估", status: "completed" },
+    { step: 6, role: "company", action: "查看谈判记录", description: "访问 /negotiations 查看2条薪酬谈判（1进行中+1已达成）", status: "completed" },
+    { step: 7, role: "company", action: "查看Offer列表", description: "访问 /offers 查看2个Offer（1已发+1已接受）", status: "completed" },
+    { step: 8, role: "company", action: "查看站内信", description: "访问 /messages 查看完整的招聘沟通记录", status: "completed" },
+    { step: 9, role: "admin", action: "查看管理后台", description: "访问 /admin 查看系统管理功能", status: "pending" },
+    { step: 10, role: "all", action: "体验完整流程", description: "使用所有 Demo 账号体验完整的招聘闭环", status: "pending" },
   ]
 }
