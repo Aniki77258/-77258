@@ -1,5 +1,8 @@
 {
   "framework": "nextjs",
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "next build",
+  "outputDirectory": "out",
   "rewrites": [
     { "source": "/(.*)", "destination": "/$1" }
   ]
