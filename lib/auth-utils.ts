@@ -70,6 +70,8 @@ export function mockVerifyToken(token: string): AuthTokenPayload | null {
 export function saveToken(token: string) {
   if (typeof window === "undefined") return
   localStorage.setItem(STORAGE_KEY, token)
+  // Also set as cookie for middleware authentication
+  document.cookie = `wlr_token=${encodeURIComponent(token)}; path=/; max-age=86400; SameSite=Lax`
 }
 
 export function getToken(): string | null {
@@ -80,6 +82,8 @@ export function getToken(): string | null {
 export function removeToken() {
   if (typeof window === "undefined") return
   localStorage.removeItem(STORAGE_KEY)
+  // Clear the auth cookie as well
+  document.cookie = "wlr_token=; path=/; max-age=0"
 }
 
 // Mock user database — Map for O(1) lookup + size cap (prevents HMR memory leak)
