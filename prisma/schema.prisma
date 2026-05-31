@@ -54,6 +54,7 @@ model User {
   subscriptions UserSubscription[]
   usageLogs     UsageLog[]
   orders        Order[]
+  paymentRecords PaymentRecord[]
 
   @@map("users")
 }
@@ -124,8 +125,8 @@ model Company {
   updatedAt    DateTime @updatedAt
 
   // Relations
-  owner           User          @relation("UserCompany", fields: [userId], references: [id])
-  createdBy       User          @relation("CompanyCreator", fields: [userId], references: [id])
+  owner           User          @relation("UserCompany", fields: [userId], references: [id], map: "company_owner_fk")
+  createdBy       User          @relation("CompanyCreator", fields: [userId], references: [id], map: "company_creator_fk")
   jobs            Job[]
   invitations     Invitation[]  @relation("InvitationCompany")
   interviews      Interview[]
@@ -416,6 +417,7 @@ model SubscriptionPlan {
   updatedAt    DateTime  @updatedAt
 
   subscriptions UserSubscription[]
+  orders        Order[]
 
   @@map("subscription_plans")
 }
@@ -450,6 +452,8 @@ model UserSubscription {
 
   user  User             @relation(fields: [userId], references: [id])
   plan  SubscriptionPlan @relation(fields: [planId], references: [id])
+  usageLogs UsageLog[]
+  orders    Order[]
 
   @@unique([userId, status])
   @@map("user_subscriptions")
@@ -514,6 +518,7 @@ model Order {
   user         User              @relation(fields: [userId], references: [id])
   plan         SubscriptionPlan  @relation(fields: [planId], references: [id])
   subscription UserSubscription? @relation(fields: [subscriptionId], references: [id])
+  paymentRecords PaymentRecord[]
 
   @@map("orders")
 }
