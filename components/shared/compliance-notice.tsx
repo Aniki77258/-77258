@@ -3,14 +3,16 @@
 import { useLanguage } from "@/lib/i18n"
 import { Shield, AlertTriangle } from "lucide-react"
 
-export function ComplianceNotice({ compact = false }: { compact?: boolean }) {
+export function ComplianceNotice({ compact = false, disclaimer }: { compact?: boolean; disclaimer?: string }) {
   const { t, language } = useLanguage()
 
   if (compact) {
     return (
-      <div className="flex items-start gap-2 px-4 py-3 rounded-lg bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-400/70">
-        <Shield className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-        <span>{t('compliance.notice')}</span>
+      <div className="flex flex-col gap-1.5 px-4 py-3 rounded-lg bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-400/70">
+        <div className="flex items-start gap-2">
+          <Shield className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+          <span>{disclaimer || t('compliance.notice')}</span>
+        </div>
       </div>
     )
   }

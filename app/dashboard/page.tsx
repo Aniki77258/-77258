@@ -1,19 +1,20 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   Users, Building2, TrendingUp, Calendar, FileCheck2, BarChart3,
   Globe, Zap, Battery, UserCheck, AlertTriangle, BotMessageSquare,
   ArrowUpRight, ArrowDownRight, Minus, Search, Bell, LogOut, RefreshCw, Database,
-  Target, Activity, Layers, Filter, Eye, ChevronRight, Send
+  Target, Activity, Layers, Filter, Eye, ChevronRight, Send,
+  Cpu, HardDrive, Wifi, Bolt,
 } from "lucide-react"
 import { AppLayout } from "@/components/shared/app-sidebar"
 import { Badge } from "@/components/ui/badge"
 import { ProgressStepper, type Step } from "@/components/shared/progress-stepper"
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, Legend,
-  ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
+  ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar,
 } from "recharts"
 import type { DashboardStats } from "@/lib/services/data-service"
 import { useLanguage } from "@/lib/i18n"
@@ -25,6 +26,9 @@ import { MetricGlowCard } from "@/components/tech/metric-glow-card"
 import { GlobalRadarMap } from "@/components/tech/global-radar-map"
 import { AIInsightPanel } from "@/components/tech/ai-insight-panel"
 import { EnergyBadge } from "@/components/tech/energy-badge"
+import { TechBackground, DataFlowCorner } from "@/components/tech/tech-background"
+import { AnimatedValue } from "@/components/tech/animated-counter"
+import { cn } from "@/lib/utils"
 
 const FLOW_STEPS: Step[] = [
   { key: "dashboard", label: "控制台" },
@@ -52,7 +56,7 @@ const DEFAULT_STATS: DashboardStats = {
   avgCandidateScore: 68,
 }
 
-// Funnel data (stage labels — kept as data, not translated)
+// Funnel data
 const funnelData = [
   { stage: "搜索", count: 28453, pct: 100, icon: Search },
   { stage: "已邀请", count: 18290, pct: 64.3, icon: Send },
@@ -74,7 +78,6 @@ const trendData = [
   { month: "2026-01", total: 28453, wind: 11480, lithium: 14020, companies: 1204 },
 ]
 
-// Skill radar data
 const skillRadarData = [
   { skill: "风机载荷仿真", value: 98, fullMark: 100 },
   { skill: "BMS电池管理", value: 93, fullMark: 100 },
@@ -120,6 +123,18 @@ const aiSuggestions = [
   { icon: TrendingUp, title: "推荐提升转化率措施", desc: "已录取候选人中 67% 来自「内推+猎头」双通道，建议加大双通道投入", priority: "medium" as const },
 ]
 
+// ===== 核心指标卡片配置 =====
+const coreMetricDefs = [
+  { key: "totalCandidates", labelKey: "dashboard.totalCandidates", icon: Users, glow: "blue" as const, trend: "up" as const, delta: "+12.3%", subKey: "candidates" },
+  { key: "newCandidatesToday", labelKey: "dashboard.newToday", icon: Bolt, glow: "cyan" as const, trend: "up" as const, delta: "+8.1%", subKey: "today" },
+  { key: "verifiedCandidates", labelKey: "dashboard.verifiedCandidates", icon: UserCheck, glow: "green" as const, trend: "up" as const, delta: "+5.7%", subKey: "verified" },
+  { key: "totalCompanies", labelKey: "dashboard.totalCompanies", icon: Building2, glow: "purple" as const, trend: "up" as const, delta: "+3.2%", subKey: "companies" },
+  { key: "activeHeadhunters", labelKey: "dashboard.activeHeadhunters", icon: Cpu, glow: "blue" as const, trend: "down" as const, delta: "-2.1%", subKey: "headhunters" },
+  { key: "totalJobs", labelKey: "dashboard.activeJobs", icon: Database, glow: "cyan" as const, trend: "up" as const, delta: "+18.6%", subKey: "jobs" },
+  { key: "conversionRate", labelKey: "dashboard.invitationConversion", icon: TrendingUp, glow: "green" as const, trend: "up" as const, delta: "+1.8pp", subKey: "rate", isPct: true },
+  { key: "offerConversionRate", labelKey: "dashboard.offerConversion", icon: BarChart3, glow: "purple" as const, trend: "down" as const, delta: "-0.5pp", subKey: "rate", isPct: true },
+]
+
 function formatNum(n: number, wanLabel: string): string {
   if (n >= 10000) return (n / 10000).toFixed(1) + wanLabel
   return n.toLocaleString()
@@ -133,6 +148,8 @@ export default function DashboardPage() {
   const [dataSource, setDataSource] = useState<"db" | "mock">("mock")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [visible, setVisible] = useState(false)
+  const headerRef = useRef<HTMLDivElement>(null)
 
   // Auth guard
   useEffect(() => {
@@ -140,6 +157,12 @@ export default function DashboardPage() {
       router.replace("/login?redirect=/dashboard")
     }
   }, [authLoading, user, router])
+
+  // Entrance animation
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 60)
+    return () => clearTimeout(t)
+  }, [])
 
   const fetchStats = async () => {
     setLoading(true)
@@ -167,17 +190,6 @@ export default function DashboardPage() {
   const wanLabel = t('dashboard.wan')
   const dataSourceLabel = dataSource === "db" ? t('dashboard.dbRealtime') : t('dashboard.demoData')
 
-  const coreMetrics = [
-    { label: t('dashboard.totalCandidates'), value: formatNum(stats.totalCandidates, wanLabel), delta: "+12.3%", trend: "up" as const, sub: dataSourceLabel },
-    { label: t('dashboard.newToday'), value: stats.newCandidatesToday.toLocaleString(), delta: "+8.1%", trend: "up" as const, sub: dataSourceLabel },
-    { label: t('dashboard.verifiedCandidates'), value: formatNum(stats.verifiedCandidates, wanLabel), delta: "+5.7%", trend: "up" as const, sub: dataSourceLabel },
-    { label: t('dashboard.totalCompanies'), value: formatNum(stats.totalCompanies, wanLabel), delta: "+3.2%", trend: "up" as const, sub: dataSourceLabel },
-    { label: t('dashboard.activeHeadhunters'), value: formatNum(stats.activeHeadhunters, wanLabel), delta: "-2.1%", trend: "down" as const, sub: dataSourceLabel },
-    { label: t('dashboard.activeJobs'), value: formatNum(stats.totalJobs, wanLabel), delta: "+18.6%", trend: "up" as const, sub: dataSourceLabel },
-    { label: t('dashboard.invitationConversion'), value: stats.conversionRate + "%", delta: "+1.8pp", trend: "up" as const, sub: dataSourceLabel },
-    { label: t('dashboard.offerConversion'), value: stats.offerConversionRate + "%", delta: "-0.5pp", trend: "down" as const, sub: dataSourceLabel },
-  ]
-
   // Funnel gradient colors
   const funnelColors = [
     "from-sky-500 to-sky-400",
@@ -191,16 +203,31 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="bg-deep-space p-4 md:p-6 space-y-6">
+      {/* 动态科技背景 */}
+      <TechBackground />
 
-        {/* Page title */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-white">{t('dashboard.ceoDashboard')}</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              {language === 'zh' ? '全球风能锂电人才搜索雷达 · 数据驾驶舱' : 'Global Wind & Lithium Talent Radar · Data Cockpit'}
+      <div className={cn(
+        "relative z-10 p-4 md:p-6 space-y-6 transition-all duration-700",
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      )}>
+
+        {/* ===== 页面标题栏 ===== */}
+        <div ref={headerRef} className="flex items-center justify-between flex-wrap gap-3">
+          <div className="relative">
+            {/* 装饰线 */}
+            <div className="absolute -left-3 top-1/2 w-1.5 h-6 -translate-y-1/2 bg-gradient-to-b from-[#38bdf8] to-[#a78bfa] rounded-full opacity-70" />
+            <h1 className="text-2xl font-bold text-white tracking-tight">
+              {t('dashboard.ceoDashboard')}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${dataSource === "db" ? "bg-emerald-400" : "bg-amber-400"} opacity-40`} />
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${dataSource === "db" ? "bg-emerald-400" : "bg-amber-400"}`} />
+                </span>
+                {language === 'zh' ? '全球风能锂电人才搜索雷达 · 数据驾驶舱' : 'Global Wind & Lithium Talent Radar · Data Cockpit'}
+              </span>
               <span className={`ml-2 inline-flex items-center gap-1 text-xs ${dataSource === "db" ? "text-emerald-400" : "text-amber-400"}`}>
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-current"></span>
                 {dataSourceLabel}
               </span>
             </p>
@@ -215,94 +242,135 @@ export default function DashboardPage() {
                 {t('dashboard.reload')}
               </button>
             )}
+            {/* 实时状态指示灯 */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#1a2a44] bg-[#0c1830]/60 backdrop-blur-sm">
+              <Wifi className="h-3.5 w-3.5 text-[#22d3ee]" />
+              <span className="text-[10px] text-slate-500">{language === 'zh' ? '实时' : 'LIVE'}</span>
+            </div>
           </div>
         </div>
 
-        {/* Progress Stepper */}
-        <ProgressStepper steps={FLOW_STEPS} currentStep="dashboard" />
+        {/* ===== 进度条 ===== */}
+        <div className="relative overflow-hidden rounded-xl border border-[#1a2a44] bg-[#0c1830]/60 backdrop-blur-sm p-4">
+          <DataFlowCorner color="#38bdf8" />
+          <ProgressStepper steps={FLOW_STEPS} currentStep="dashboard" />
+        </div>
 
-        {/* Loading */}
+        {/* ===== Loading ===== */}
         {loading && (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <RefreshCw className="h-8 w-8 text-sky-400 mx-auto animate-spin" />
-              <p className="mt-3 text-sm text-slate-500">{t('dashboard.loading')}</p>
+              <div className="relative mx-auto w-12 h-12">
+                <div className="absolute inset-0 rounded-full border-2 border-[#38bdf8]/20 border-t-[#38bdf8] animate-spin" />
+                <div className="absolute inset-1 rounded-full border-2 border-[#a78bfa]/20 border-b-[#a78bfa] animate-spin [animation-direction:reverse] [animation-duration:1.5s]" />
+              </div>
+              <p className="mt-4 text-sm text-slate-500">{t('dashboard.loading')}</p>
             </div>
           </div>
         )}
 
-        {/* ============ 1. Core metrics ============ */}
+        {/* ===== 1. 核心指标卡片 ===== */}
         {!loading && (
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">{t('dashboard.coreMetrics')}</h2>
+            <div className="flex items-center gap-2 mb-3">
+              <Cpu className="h-3.5 w-3.5 text-[#38bdf8]" />
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                {t('dashboard.coreMetrics')}
+              </h2>
+              <div className="flex-1 border-b border-[#1a2a44] ml-2" />
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
-              {coreMetrics.map((m) => (
-                <MetricGlowCard
-                  key={m.label}
-                  label={m.label}
-                  value={m.value}
-                  delta={m.delta}
-                  trend={m.trend}
-                  sub={m.sub}
-                  glowColor="blue"
-                />
-              ))}
+              {coreMetricDefs.map((m, i) => {
+                const Icon = m.icon
+                const rawValue = (stats as any)[m.key]
+                const displayValue = m.isPct ? rawValue : rawValue
+                return (
+                  <div
+                    key={m.key}
+                    className="relative group"
+                    style={{ animationDelay: `${i * 80}ms` }}
+                  >
+                    <MetricGlowCard
+                      label={t(m.labelKey)}
+                      value={m.isPct ? `${rawValue}%` : formatNum(rawValue, wanLabel)}
+                      delta={m.delta}
+                      trend={m.trend}
+                      sub={dataSourceLabel}
+                      glowColor={m.glow}
+                      icon={
+                        <div className="relative">
+                          <Icon className="h-4 w-4 text-slate-500 group-hover:text-[#38bdf8] transition-colors" />
+                          <div className="absolute -inset-1 rounded-full bg-[#38bdf8]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      }
+                    />
+                    {/* 角落装饰 */}
+                    <DataFlowCorner color="#38bdf8" />
+                  </div>
+                )
+              })}
             </div>
           </section>
         )}
 
-        {/* ============ 2. World Heatmap + Funnel ============ */}
+        {/* ===== 2. 全球雷达地图 + 招聘漏斗 ===== */}
         {!loading && (
           <section className="grid lg:grid-cols-5 gap-6">
-            <div className="lg:col-span-3">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                <Globe className="h-3.5 w-3.5" />
-                {t('dashboard.globalTalentRadar')}
-              </h2>
-              <TechCard className="rounded-xl overflow-hidden" padding="sm">
-                <div className="p-3">
-                  <WorldHeatmap className="w-full" />
+            <div className="lg:col-span-3 relative">
+              <div className="flex items-center gap-2 mb-3">
+                <Globe className="h-3.5 w-3.5 text-[#38bdf8]" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                  {t('dashboard.globalTalentRadar')}
+                </h2>
+                <div className="flex-1 border-b border-[#1a2a44] ml-2" />
+                {/* 地图图例 */}
+                <div className="hidden lg:flex items-center gap-4 text-[10px] text-slate-400">
+                  <span><span className="inline-block w-2 h-2 rounded-full bg-[#38bdf8] mr-1" />{language === 'zh' ? '人才密度' : 'Density'}</span>
+                  <span><span className="inline-block w-2 h-0.5 bg-[#22d3ee] mr-1" />{language === 'zh' ? '流动线' : 'Flow'}</span>
                 </div>
-                <div className="px-4 pb-3">
-                  <div className="flex justify-center gap-6 text-[10px] text-slate-400 border-t border-[#1a2a44] pt-3">
-                    <span><span className="inline-block w-2 h-2 rounded-full bg-sky-400 mr-1"></span>{language === 'zh' ? '热点越大 = 人才越多' : 'Larger = More Talent'}</span>
-                    <span><span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1"></span>{language === 'zh' ? '连线 = 人才流动网络' : 'Lines = Flow Network'}</span>
-                    <span><span className="inline-block w-1.5 h-1.5 rounded-full bg-white/70 mr-1"></span>{language === 'zh' ? '白点 = 核心枢纽' : 'White = Core Hub'}</span>
-                  </div>
+              </div>
+              <TechCard className="rounded-xl overflow-hidden relative" padding="sm" glow scan>
+                <div className="p-3">
+                  <GlobalRadarMap className="w-full" />
                 </div>
               </TechCard>
             </div>
 
-            {/* Enhanced Recruitment Funnel */}
+            {/* 招聘漏斗 */}
             <div className="lg:col-span-2">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                <Filter className="h-3.5 w-3.5" />
-                {t('dashboard.recruitmentFunnel')}
-              </h2>
-              <TechCard className="rounded-xl h-full" padding="sm">
+              <div className="flex items-center gap-2 mb-3">
+                <Filter className="h-3.5 w-3.5 text-[#a78bfa]" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                  {t('dashboard.recruitmentFunnel')}
+                </h2>
+                <div className="flex-1 border-b border-[#1a2a44] ml-2" />
+              </div>
+              <TechCard className="rounded-xl h-full" padding="sm" glow>
                 <div className="space-y-3">
                   {funnelData.map((f, i) => {
                     const Icon = f.icon
                     const isLast = i === funnelData.length - 1
                     const dropRate = i > 0 ? `-${((1 - f.pct / funnelData[i - 1].pct) * 100).toFixed(1)}%` : ""
                     return (
-                      <div key={f.stage} className="group">
+                      <div key={f.stage} className="group relative">
                         <div className="flex justify-between text-xs mb-1.5">
                           <div className="flex items-center gap-1.5">
-                            <Icon className="h-3 w-3 text-slate-500 group-hover:text-sky-400 transition-colors" />
+                            <Icon className="h-3 w-3 text-slate-500 group-hover:text-[#38bdf8] transition-colors" />
                             <span className="text-slate-400 group-hover:text-slate-300 transition-colors">{f.stage}</span>
                             {dropRate && (
                               <span className="text-[9px] text-red-400/60">{dropRate}</span>
                             )}
                           </div>
-                          <span className="text-white font-medium tabular-nums">{f.count.toLocaleString()}</span>
+                          <span className="text-white font-medium tabular-nums">
+                            <AnimatedValue value={f.count} duration={1200 + i * 150} />
+                          </span>
                         </div>
                         <div className="h-3 rounded-full bg-[#060d1a] overflow-hidden relative">
                           <div
                             className={`h-full rounded-full bg-gradient-to-r ${funnelColors[i]} transition-all duration-700 ease-out group-hover:brightness-125`}
                             style={{ width: `${Math.max(f.pct, 2)}%` }}
                           />
-                          {/* Shine effect */}
+                          {/* Shine */}
                           <div
                             className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
                             style={{ width: `${Math.max(f.pct, 2)}%` }}
@@ -310,7 +378,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex justify-between mt-0.5">
                           <span className="text-[10px] text-slate-600">{f.pct}%</span>
-                          {i === funnelData.length - 1 && (
+                          {isLast && (
                             <span className="text-[10px] text-emerald-400/70 font-medium">
                               {(f.count / funnelData[0].count * 100).toFixed(1)}% {language === 'zh' ? '终面率' : 'closing'}
                             </span>
@@ -325,19 +393,23 @@ export default function DashboardPage() {
           </section>
         )}
 
-        {/* ============ 3. Skill Radar + Activity Feed ============ */}
+        {/* ===== 3. 技能雷达 + 动态feed ===== */}
         {!loading && (
           <section className="grid lg:grid-cols-5 gap-6">
-            {/* Skill Radar Chart */}
+            {/* 技能雷达图 */}
             <div className="lg:col-span-3">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                <Target className="h-3.5 w-3.5" />
-                {t('dashboard.skillDistribution')}
-              </h2>
-              <TechCard className="rounded-xl" padding="sm">
+              <div className="flex items-center gap-2 mb-3">
+                <Target className="h-3.5 w-3.5 text-[#38bdf8]" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                  {t('dashboard.skillDistribution')}
+                </h2>
+                <div className="flex-1 border-b border-[#1a2a44] ml-2" />
+              </div>
+              <TechCard className="rounded-xl relative" padding="sm" glow>
+                <DataFlowCorner color="#38bdf8" />
                 <h3 className="text-sm font-medium text-white mb-1">{t('dashboard.skillRadar')}</h3>
                 <p className="text-[10px] text-slate-500 mb-2">
-                  {language === 'zh' ? '基于 28,453 名候选人技能标签分析 — 数值 = 人才需求强度 (满分 100)' : 'Based on 28,453 candidate skill tags — Value = talent demand intensity (max 100)'}
+                  {language === 'zh' ? '基于 28,453 名候选人技能标签分析' : 'Based on 28,453 candidate skill tags'}
                 </p>
                 <ResponsiveContainer width="100%" height={320}>
                   <RadarChart cx="50%" cy="50%" outerRadius="78%" data={skillRadarData}>
@@ -354,7 +426,7 @@ export default function DashboardPage() {
                       axisLine={false}
                       tickLine={false}
                     />
-                    <Radar
+                    <RechartsRadar
                       name={language === 'zh' ? '人才需求' : 'Demand'}
                       dataKey="value"
                       stroke="#0ea5e9"
@@ -362,7 +434,7 @@ export default function DashboardPage() {
                       fillOpacity={0.25}
                       strokeWidth={2}
                     />
-                    <Radar
+                    <RechartsRadar
                       name={language === 'zh' ? '平均供给' : 'Avg Supply'}
                       dataKey="fullMark"
                       stroke="#475569"
@@ -370,38 +442,41 @@ export default function DashboardPage() {
                       strokeWidth={1}
                       strokeDasharray="4 4"
                     />
+                    <Tooltip
+                      contentStyle={{ background: "#0c1830", border: "#1a2a44", fontSize: 11, color: "#e2e8f0" }}
+                    />
                   </RadarChart>
                 </ResponsiveContainer>
-                <div className="flex justify-center gap-4 mt-3">
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-                    <span className="w-2.5 h-2.5 rounded-sm bg-sky-500/40"></span>
-                    {language === 'zh' ? '人才需求强度' : 'Demand Intensity'}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-                    <span className="w-2.5 h-2.5 border border-dashed border-slate-500 rounded-sm"></span>
-                    {language === 'zh' ? '满分参考线' : 'Max Reference'}
-                  </div>
-                </div>
               </TechCard>
             </div>
 
             {/* Activity Feed */}
             <div className="lg:col-span-2">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                <Activity className="h-3.5 w-3.5" />
-                {t('dashboard.activityFeed')}
-              </h2>
+              <div className="flex items-center gap-2 mb-3">
+                <Activity className="h-3.5 w-3.5 text-[#22d3ee]" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                  {t('dashboard.activityFeed')}
+                </h2>
+                <div className="flex-1 border-b border-[#1a2a44] ml-2" />
+              </div>
               <ActivityFeed activities={DEFAULT_ACTIVITIES} language={language} />
             </div>
           </section>
         )}
 
-        {/* ============ 4. Trend Charts ============ */}
+        {/* ===== 4. 趋势图表 ===== */}
         {!loading && (
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">{t('dashboard.trendCharts')}</h2>
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="h-3.5 w-3.5 text-[#4ade80]" />
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                {t('dashboard.trendCharts')}
+              </h2>
+              <div className="flex-1 border-b border-[#1a2a44] ml-2" />
+            </div>
             <div className="grid lg:grid-cols-2 gap-6">
-              <TechCard className="rounded-xl" padding="sm">
+              <TechCard className="rounded-xl relative" padding="sm" glow>
+                <DataFlowCorner color="#38bdf8" />
                 <h3 className="text-sm font-medium text-white mb-3">{t('dashboard.globalTalentGrowth')}</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <AreaChart data={trendData}>
@@ -414,13 +489,15 @@ export default function DashboardPage() {
                     <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#64748b" }} />
                     <YAxis tick={{ fontSize: 10, fill: "#64748b" }} />
                     <Tooltip contentStyle={{ background: "#0c1830", border: "#1a2a44", fontSize: 11, color: "#e2e8f0" }} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
                     <Area type="monotone" dataKey="total" stroke="#0ea5e9" fill="url(#gradTotal)" strokeWidth={2} name={language === 'zh' ? '总数' : 'Total'} />
                     <Area type="monotone" dataKey="wind" stroke="#6366f1" fill="transparent" strokeWidth={1.5} name={language === 'zh' ? '风能' : 'Wind'} />
                     <Area type="monotone" dataKey="lithium" stroke="#22c55e" fill="transparent" strokeWidth={1.5} name={language === 'zh' ? '锂电' : 'Lithium'} />
                   </AreaChart>
                 </ResponsiveContainer>
               </TechCard>
-              <TechCard className="rounded-xl" padding="sm">
+              <TechCard className="rounded-xl relative" padding="sm" glow>
+                <DataFlowCorner color="#4ade80" />
                 <h3 className="text-sm font-medium text-white mb-3">{t('dashboard.companyActivity')}</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={trendData}>
@@ -435,27 +512,35 @@ export default function DashboardPage() {
           </section>
         )}
 
-        {/* ============ 5. Leaderboards ============ */}
+        {/* ===== 5. 排行榜 ===== */}
         {!loading && (
           <>
             <section>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">{t('dashboard.leaderboards')}</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <Layers className="h-3.5 w-3.5 text-[#a78bfa]" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                  {t('dashboard.leaderboards')}
+                </h2>
+                <div className="flex-1 border-b border-[#1a2a44] ml-2" />
+              </div>
               <div className="grid lg:grid-cols-3 gap-6">
-                <TechCard className="rounded-xl" padding="sm">
+                {/* 热门国家 */}
+                <TechCard className="rounded-xl relative" padding="sm" glow>
+                  <DataFlowCorner color="#38bdf8" />
                   <h3 className="text-sm font-medium text-white mb-3">{t('dashboard.hotCountries')}</h3>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {hotCountries.map((c) => (
-                      <div key={c.country} className="flex items-center gap-3">
-                        <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                          c.rank <= 3 ? "bg-sky-500/20 text-sky-400" : "bg-slate-800 text-slate-500"
+                      <div key={c.country} className="flex items-center gap-3 group">
+                        <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 ${
+                          c.rank <= 3 ? "bg-[#0ea5e9]/20 text-[#38bdf8] shadow-[0_0_8px_rgba(56,189,248,0.2)]" : "bg-slate-800/60 text-slate-500"
                         }`}>{c.rank}</span>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-white font-medium">{c.country}</span>
-                            <Badge variant="outline" className="text-[9px] border-sky-500/30 text-sky-400">{c.tag}</Badge>
+                            <span className="text-xs text-white font-medium truncate">{c.country}</span>
+                            <EnergyBadge variant="authorized">{c.tag}</EnergyBadge>
                           </div>
                           <div className="flex items-center gap-3 mt-0.5">
-                            <span className="text-[10px] text-slate-500">{c.candidates.toLocaleString()} {language === 'zh' ? '人' : ''}</span>
+                            <span className="text-[10px] text-slate-500"><AnimatedValue value={c.candidates} duration={1400} /> {language === 'zh' ? '人' : ''}</span>
                             <span className="text-[10px] text-emerald-400">{c.growth}</span>
                           </div>
                         </div>
@@ -464,48 +549,58 @@ export default function DashboardPage() {
                   </div>
                 </TechCard>
 
-                <TechCard className="rounded-xl" padding="sm">
+                {/* 热门技能 */}
+                <TechCard className="rounded-xl relative" padding="sm" glow>
+                  <DataFlowCorner color="#a78bfa" />
                   <h3 className="text-sm font-medium text-white mb-3">{t('dashboard.hotSkills')}</h3>
                   <div className="space-y-2.5">
                     {hotSkills.map((s) => (
                       <div key={s.skill}>
                         <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-300">{s.skill}</span>
-                          <div className="flex items-center gap-1">
+                          <span className="text-slate-300 truncate">{s.skill}</span>
+                          <div className="flex items-center gap-1 shrink-0 ml-2">
                             {s.trend === "up" ? <ArrowUpRight className="h-3 w-3 text-emerald-400" /> : s.trend === "flat" ? <Minus className="h-3 w-3 text-slate-500" /> : null}
-                            <span className="text-slate-400">{s.demand}</span>
+                            <span className="text-slate-400 tabular-nums">{s.demand}</span>
                           </div>
                         </div>
-                        <div className="h-1.5 rounded-full bg-[#060d1a]">
-                          <div className="h-full rounded-full bg-sky-500/70" style={{ width: `${s.demand}%` }} />
+                        <div className="h-1.5 rounded-full bg-[#060d1a] relative overflow-hidden">
+                          <div
+                            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#38bdf8] to-[#a78bfa] transition-all duration-1000 ease-out"
+                            style={{ width: `${s.demand}%` }}
+                          />
                         </div>
                       </div>
                     ))}
                   </div>
                 </TechCard>
 
-                <TechCard className="rounded-xl" padding="sm">
+                {/* 平均评分环 */}
+                <TechCard className="rounded-xl relative" padding="sm" glow>
+                  <DataFlowCorner color="#4ade80" />
                   <h3 className="text-sm font-medium text-white mb-3">{t('dashboard.avgCandidateScore')}</h3>
                   <div className="flex flex-col items-center justify-center py-6">
-                    <div className="relative">
-                      <svg className="w-28 h-28" viewBox="0 0 120 120">
+                    <div className="relative w-28 h-28">
+                      <svg className="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
                         <circle cx="60" cy="60" r="50" fill="none" stroke="#1a2a44" strokeWidth="8" />
                         <circle
-                          cx="60" cy="60" r="50" fill="none" stroke="url(#scoreGrad)"
-                          strokeWidth="8" strokeLinecap="round"
+                          cx="60" cy="60" r="50" fill="none"
+                          stroke="url(#scoreGrad2)" strokeWidth="8" strokeLinecap="round"
                           strokeDasharray={`${(stats.avgCandidateScore / 100) * 315} 315`}
-                          transform="rotate(-90 60 60)"
                         />
                         <defs>
-                          <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="0">
+                          <linearGradient id="scoreGrad2" x1="0" y1="0" x2="1" y2="0">
                             <stop offset="0%" stopColor="#0ea5e9" />
                             <stop offset="100%" stopColor="#6366f1" />
                           </linearGradient>
                         </defs>
                       </svg>
+                      {/* 脉冲光晕 */}
+                      <div className="absolute inset-2 rounded-full border border-[#38bdf8]/10 animate-ping opacity-20" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="text-center">
-                          <span className="text-3xl font-bold text-white">{stats.avgCandidateScore}</span>
+                          <span className="text-3xl font-bold text-white tabular-nums">
+                            <AnimatedValue value={stats.avgCandidateScore} duration={1800} />
+                          </span>
                           <span className="text-xs text-slate-500 block">/ 100</span>
                         </div>
                       </div>
@@ -518,30 +613,37 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            {/* ============ 6. Risk alerts ============ */}
+            {/* ===== 6. 风险告警 ===== */}
             <section>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">{t('dashboard.riskAlerts')}</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                  {t('dashboard.riskAlerts')}
+                </h2>
+                <div className="flex-1 border-b border-[#1a2a44] ml-2" />
+                <span className="text-[10px] text-slate-500">{language === 'zh' ? '共' : ''} {riskItems.reduce((s, r) => s + r.count, 0)} {language === 'zh' ? '条' : 'total'}</span>
+              </div>
               <div className="grid lg:grid-cols-2 gap-4">
                 {riskItems.map((r) => (
-                  <div key={r.title} className={`glass-card p-4 rounded-xl ${
-                    r.level === "high" ? "border-[#f87171]/30 bg-[#f87171]/5" :
-                    r.level === "medium" ? "border-[#fbbf24]/30 bg-[#fbbf24]/5" :
-                    "glass"
+                  <div key={r.title} className={`glass-card p-4 rounded-xl border transition-all duration-300 hover:translate-y-[-1px] ${
+                    r.level === "high" ? "border-[#f87171]/30 bg-[#f87171]/[0.03] hover:shadow-[0_0_20px_rgba(248,113,113,0.08)]" :
+                    r.level === "medium" ? "border-[#fbbf24]/30 bg-[#fbbf24]/[0.03] hover:shadow-[0_0_20px_rgba(251,191,36,0.08)]" :
+                    "border-[#1a2a44] hover:border-[#38bdf8]/20"
                   }`}>
                     <div className="flex items-start gap-3">
                       <AlertTriangle className={`h-4 w-4 mt-0.5 shrink-0 ${
                         r.level === "high" ? "text-red-400" : r.level === "medium" ? "text-amber-400" : "text-slate-500"
                       }`} />
-                      <div className="flex-1">
-                        <p className="text-xs text-white font-medium">{r.title}</p>
-                        <div className="flex items-center gap-3 mt-1">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-white font-medium truncate">{r.title}</p>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
                           <Badge variant="outline" className={`text-[9px] ${
                             r.level === "high" ? "border-red-500/30 text-red-400" : r.level === "medium" ? "border-amber-500/30 text-amber-400" : "border-slate-700 text-slate-500"
                           }`}>{r.level === "high" ? (language === 'zh' ? '高风险' : 'High') : r.level === "medium" ? (language === 'zh' ? '中风险' : 'Medium') : (language === 'zh' ? '低风险' : 'Low')}</Badge>
-                          <span className="text-xs text-slate-400">{language === 'zh' ? `涉及 ${r.count} 条` : `${r.count} items`}</span>
+                          <span className="text-xs text-slate-400"><AnimatedValue value={r.count} duration={1000} /> {language === 'zh' ? '条' : 'items'}</span>
                         </div>
                         <button className={`mt-2 text-[11px] font-medium transition ${
-                          r.level === "high" ? "text-red-400 hover:text-red-300" : r.level === "medium" ? "text-amber-400 hover:text-amber-300" : "text-sky-400 hover:text-sky-300"
+                          r.level === "high" ? "text-red-400 hover:text-red-300" : r.level === "medium" ? "text-amber-400 hover:text-amber-300" : "text-[#38bdf8] hover:text-[#7dd3fc]"
                         }`}>{r.action} →</button>
                       </div>
                     </div>
@@ -550,9 +652,19 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            {/* ============ 7. AI Suggestions ============ */}
+            {/* ===== 7. AI 建议 ===== */}
             <section>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">{t('dashboard.aiInsights')}</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <BotMessageSquare className="h-3.5 w-3.5 text-[#22d3ee]" />
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+                  {t('dashboard.aiInsights')}
+                </h2>
+                <div className="flex-1 border-b border-[#1a2a44] ml-2" />
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[#22d3ee]/20 bg-[#22d3ee]/5">
+                  <div className="h-1.5 w-1.5 rounded-full bg-[#22d3ee] animate-pulse" />
+                  <span className="text-[9px] text-[#22d3ee]">{language === 'zh' ? 'AI 实时分析' : 'AI LIVE'}</span>
+                </div>
+              </div>
               <AIInsightPanel insights={aiSuggestions.map(s => ({
                 title: s.title,
                 description: s.desc,
@@ -563,7 +675,7 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* Error fallback */}
+        {/* Error */}
         {error && (
           <div className="p-4 border border-red-500/20 bg-red-500/5 rounded-xl text-center">
             <p className="text-sm text-red-400">{t('dashboard.loadError')}: {error}</p>
@@ -572,7 +684,8 @@ export default function DashboardPage() {
         )}
 
         {/* Footer */}
-        <footer className="border-t border-[#1a2a44] pt-4 pb-8 text-center">
+        <footer className="border-t border-[#1a2a44] pt-4 pb-8 text-center relative">
+          <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-[#38bdf8]/30 to-transparent" />
           <p className="text-[11px] text-slate-600">
             © 2026 {language === 'zh' ? '全球风能锂电人才搜索雷达' : 'Global Wind & Lithium Talent Radar'} · {dataSource === "db" ? (language === 'zh' ? '数据库驱动' : 'Database Driven') : (language === 'zh' ? '示例数据平台' : 'Demo Data Platform')}
           </p>

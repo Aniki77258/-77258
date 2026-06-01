@@ -29,6 +29,7 @@ interface NavItemDef {
 const NAV_DEFS: Record<string, NavItemDef[]> = {
   company: [
     { labelKey: "nav.dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { labelKey: "nav.talentSearchPage", href: "/searches", icon: Globe },
     { labelKey: "nav.talentSearch", href: "/candidates", icon: Search },
     { labelKey: "nav.invitations", href: "/invitations", icon: Send },
     { labelKey: "nav.interviews", href: "/interviews", icon: Calendar },
@@ -46,6 +47,7 @@ const NAV_DEFS: Record<string, NavItemDef[]> = {
   ],
   candidate: [
     { labelKey: "nav.dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { labelKey: "nav.talentSearchPage", href: "/searches", icon: Globe },
     { labelKey: "nav.invitations", href: "/invitations", icon: Send },
     { labelKey: "nav.interviews", href: "/interviews", icon: Calendar },
     { labelKey: "nav.assessments", href: "/assessments", icon: ClipboardCheck },
@@ -59,6 +61,7 @@ const NAV_DEFS: Record<string, NavItemDef[]> = {
   ],
   admin: [
     { labelKey: "nav.dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { labelKey: "nav.talentSearchPage", href: "/searches", icon: Globe },
     { labelKey: "nav.verification", href: "/admin/verification", icon: Shield },
     { labelKey: "admin.candidates", href: "/admin/candidates", icon: UserCheck },
     { labelKey: "admin.reports", href: "/admin/reports", icon: AlertTriangle },

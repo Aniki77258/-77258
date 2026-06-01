@@ -39,6 +39,7 @@ const zh: TranslationDict = {
   nav: {
     dashboard: 'CEO 操作仓',
     talentSearch: '人才搜索',
+    talentSearchPage: '人才搜索',
     candidates: '候选人',
     companies: '企业',
     jobs: '岗位',
@@ -551,6 +552,7 @@ const en: TranslationDict = {
   nav: {
     dashboard: 'CEO Dashboard',
     talentSearch: 'Talent Search',
+    talentSearchPage: 'Talent Search',
     candidates: 'Candidates',
     companies: 'Companies',
     jobs: 'Jobs',

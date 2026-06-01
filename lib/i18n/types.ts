@@ -41,6 +41,7 @@ export interface TranslationDict {
   nav: {
     dashboard: string
     talentSearch: string
+    talentSearchPage: string
     candidates: string
     companies: string
     jobs: string

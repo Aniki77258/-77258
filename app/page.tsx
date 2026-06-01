@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/lib/i18n"
+import { useAuth } from "@/lib/auth"
 import { TechShell } from "@/components/tech/tech-shell"
 import { TechCard, TechCardTitle, TechCardDescription } from "@/components/tech/tech-card"
 import { MetricGlowCard } from "@/components/tech/metric-glow-card"
@@ -12,13 +13,17 @@ import { ComplianceNotice } from "@/components/tech/compliance-notice"
 import {
   Search, Send, Video, FileCheck2, TrendingUp, UserCheck,
   Building2, Users, UserSearch, Globe, Shield, Zap,
-  ArrowRight, Radar, Battery, Wind, ChevronRight, Sparkles
+  ArrowRight, Radar, Battery, Wind, ChevronRight, Sparkles,
+  LayoutDashboard, LogOut
 } from "lucide-react"
 
 export default function HomePage() {
   const { t, language, toggleLanguage } = useLanguage()
+  const { user, logout } = useAuth()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
+
+  const isLoggedIn = !!user
 
   const isZh = language === 'zh'
 
@@ -82,12 +87,29 @@ export default function HomePage() {
             >
               {language === 'zh' ? 'EN' : '中文'}
             </button>
-            <a href="/login" className="px-4 py-1.5 text-xs rounded-lg border border-white/10 text-slate-300 hover:text-white hover:border-white/30 transition-all">
-              {isZh ? "登录" : "Login"}
-            </a>
-            <a href="/register" className="btn-energy text-xs !py-1.5 !px-4">
-              {isZh ? "免费注册" : "Sign Up Free"}
-            </a>
+            {isLoggedIn ? (
+              <>
+                <a href="/searches" className="btn-energy text-xs !py-1.5 !px-4 flex items-center gap-1">
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  {isZh ? "进入控制台" : "Dashboard"}
+                </a>
+                <button
+                  onClick={() => { logout(); router.push("/") }}
+                  className="px-3 py-1.5 text-xs rounded-lg border border-white/10 text-slate-400 hover:text-red-400 hover:border-red-400/30 transition-all"
+                >
+                  {isZh ? "退出" : "Logout"}
+                </button>
+              </>
+            ) : (
+              <>
+                <a href="/login" className="px-4 py-1.5 text-xs rounded-lg border border-white/10 text-slate-300 hover:text-white hover:border-white/30 transition-all">
+                  {isZh ? "登录" : "Login"}
+                </a>
+                <a href="/register" className="btn-energy text-xs !py-1.5 !px-4">
+                  {isZh ? "免费注册" : "Sign Up Free"}
+                </a>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -144,13 +166,22 @@ export default function HomePage() {
               <Search className="w-4 h-4 mr-2 inline" />
               {isZh ? "立即搜索人才" : "Search Talent Now"}
             </a>
-            <a href="/register" className="btn-energy-green text-base !px-8 !py-3">
-              {isZh ? "免费注册" : "Sign Up Free"}
-              <ArrowRight className="w-4 h-4 ml-2 inline" />
-            </a>
-            <a href="/login" className="px-8 py-3 rounded-lg text-base font-medium border border-white/15 text-white hover:border-white/30 hover:bg-white/5 transition-all">
-              {isZh ? "登录平台" : "Login"}
-            </a>
+            {isLoggedIn ? (
+              <a href="/searches" className="btn-energy-green text-base !px-8 !py-3">
+                <LayoutDashboard className="w-4 h-4 mr-2 inline" />
+                {isZh ? "进入控制台" : "Enter Dashboard"}
+              </a>
+            ) : (
+              <>
+                <a href="/register" className="btn-energy-green text-base !px-8 !py-3">
+                  {isZh ? "免费注册" : "Sign Up Free"}
+                  <ArrowRight className="w-4 h-4 ml-2 inline" />
+                </a>
+                <a href="/login" className="px-8 py-3 rounded-lg text-base font-medium border border-white/15 text-white hover:border-white/30 hover:bg-white/5 transition-all">
+                  {isZh ? "登录平台" : "Login"}
+                </a>
+              </>
+            )}
           </div>
 
           {/* Hero visual - Global Radar */}
@@ -173,7 +204,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ========== User Entry Portals ========== */}
+      {/* ========== User Entry Portals (only for visitors) ========== */}
+      {!isLoggedIn && (
       <section className="py-12 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-center text-xl font-bold text-white mb-8">
@@ -200,6 +232,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* ========== Public Stats ========== */}
       <section className="py-12 px-4">

@@ -1,3 +1,13 @@
 {
-  "outputDirectory": "out"
+  "buildCommand": "npx prisma generate && npm run build",
+  "installCommand": "npm install --ignore-scripts",
+  "framework": "nextjs",
+  "env": {
+    "DATABASE_URL": "postgresql://dummy:dummy@localhost:5432/dummy?schema=public",
+    "JWT_SECRET": "vercel-deployment-jwt-secret-2026-global-talent-radar",
+    "NEXTAUTH_SECRET": "vercel-deployment-nextauth-secret-2026",
+    "NEXTAUTH_URL": "https://your-project.vercel.app",
+    "DEFAULT_LOCALE": "zh",
+    "DEFAULT_TIMEZONE": "Asia/Shanghai"
+  }
 }

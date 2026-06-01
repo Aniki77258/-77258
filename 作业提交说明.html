@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>全球风能锂电人才搜索雷达 — 作业提交说明</title>
+  <style>
+    @media print {
+      body { margin: 1.5cm; }
+      .page-break { page-break-before: always; }
+    }
+    body { font-family: "Microsoft YaHei", "微软雅黑", Arial, sans-serif; font-size: 12pt; line-height: 1.8; color: #222; max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    h1 { font-size: 22pt; color: #003366; border-bottom: 3px solid #003366; padding-bottom: 8px; }
+    h2 { font-size: 16pt; color: #0066CC; margin-top: 30px; }
+    h3 { font-size: 14pt; color: #0099FF; }
+    .cover { text-align: center; padding: 80px 0; }
+    .cover h1 { font-size: 26pt; border: none; }
+    .cover .subtitle { font-size: 14pt; color: #666; font-style: italic; margin: 10px 0 40px; }
+    .cover .title-zh { font-size: 20pt; color: #CC0000; font-weight: bold; margin: 40px 0; }
+    .cover .meta { font-size: 12pt; color: #444; margin: 8px 0; }
+    .login-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    .login-table th { background: #003366; color: #fff; padding: 10px; text-align: center; }
+    .login-table td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    .login-table tr:nth-child(even) td { background: #F0F4FA; }
+    .step { margin: 12px 0; padding-left: 24px; position: relative; }
+    .step:before { content: counter(step); counter-increment: step; position: absolute; left: 0; top: 0; background: #003366; color: #fff; width: 20px; height: 20px; border-radius: 50%; font-size: 11pt; display: flex; align-items: center; justify-content: center; }
+    .tech-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    .tech-table th { background: #003366; color: #fff; padding: 8px 12px; text-align: left; }
+    .tech-table td { border: 1px solid #ccc; padding: 8px 12px; }
+    .tech-table tr:nth-child(even) td { background: #F0F4FA; }
+    .url-box { background: #E8F4FD; border: 1px solid #0066CC; border-radius: 6px; padding: 12px; font-size: 13pt; text-align: center; margin: 12px 0; word-break: break-all; }
+    .note { background: #FFF8E1; border-left: 4px solid #FF9800; padding: 10px 14px; margin: 12px 0; font-size: 11pt; color: #7A5000; }
+    .footer-line { text-align: right; margin-top: 60px; color: #ccc; }
+    ol { counter-reset: step; list-style: none; padding-left: 0; }
+    ol li { counter-increment: step; margin: 10px 0; padding-left: 28px; position: relative; }
+    ol li:before { content: counter(step)"."; position: absolute; left: 0; font-weight: bold; color: #003366; }
+    .signature { text-align: right; margin-top: 60px; }
+    .signature p { margin: 12px 0; }
+  </style>
+</head>
+<body>
+
+<!-- 封面 -->
+<div class="cover">
+  <h1 style="border:none;">全球风能锂电人才搜索雷达平台</h1>
+  <p class="subtitle">Global Wind & Lithium Talent Radar</p>
+  <p class="title-zh">课 程 作 业 提 交 说 明 书</p>
+  <p class="meta">项目名称：全球风能锂电人才搜索雷达 v1.0.0</p>
+  <p class="meta">技术领域：新能源 · 风能 · 锂电 · 人才大数据</p>
+  <p class="meta">技术栈：Next.js 14 + TypeScript + Tailwind CSS + Recharts</p>
+  <p class="meta">提交日期：2026 年 6 月 1 日</p>
+</div>
+
+<div class="page-break"></div>
+
+<!-- 一、项目概述 -->
+<h1>一、项目概述</h1>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;本平台（Global Wind & Lithium Talent Radar，简称 WLR）是一个面向全球风能（Wind Energy）与锂电（Lithium Battery）领域的人才搜索与评估系统。平台基于 Next.js 14（App Router）构建，整合了 102+ 全球真实研究者数据，通过 AI 智能推荐算法，为新能源企业、高校研究所、猎头机构提供精准的人才发现、对比、评估一体化服务。</p>
+
+<p><strong>核心功能包括：</strong></p>
+<ol>
+  <li>实时人才搜索：支持关键词、行业、国家三维筛选；</li>
+  <li>AI 智能推荐：基于匹配评分算法自动排名；</li>
+  <li>人才对比功能：支持最多 4 人并排对比；</li>
+  <li>数据来源标注：真实数据（arXiv / Crossref）与本地模拟数据双模式；</li>
+  <li>角色权限体系：企业 HR / 候选人 / 管理员三权分立。</li>
+</ol>
+
+<!-- 二、访问地址与登录方式 -->
+<h1>二、访问地址与登录方式</h1>
+
+<h2>2.1 公网访问地址</h2>
+<p>当前平台通过本地隧道对外提供服务，访问地址为：</p>
+<div class="url-box">
+  <strong>https://nine-experts-sin.localtunnel.me</strong>
+</div>
+<p class="note">⚠️ 注意：首次访问 localtunnel 会出现确认页面，点击「Continue」即可进入平台。该链接为临时地址，电脑关机后失效。如需永久地址，建议部署至 Vercel 或 CloudStudio。</p>
+
+<h2>2.2 登录账号</h2>
+<table class="login-table">
+  <tr>
+    <th>角色</th>
+    <th>账号</th>
+    <th>密码</th>
+    <th>权限说明</th>
+  </tr>
+  <tr>
+    <td><strong>管理员</strong></td>
+    <td>admin</td>
+    <td>123456</td>
+    <td>全平台管理权限</td>
+  </tr>
+  <tr>
+    <td><strong>企业 HR</strong></td>
+    <td>boss</td>
+    <td>123456</td>
+    <td>发布职位、搜索人才</td>
+  </tr>
+</table>
+
+<h2>2.3 登录步骤</h2>
+<ol>
+  <li>打开浏览器，访问上述公网地址；</li>
+  <li>点击页面右上角「登录」按钮（或直接访问 <code>/login</code> 路径）；</li>
+  <li>在「账号」输入框输入账号（<code>admin</code> 或 <code>boss</code>）；</li>
+  <li>在「密码」输入框输入密码（<code>123456</code>）；</li>
+  <li>点击蓝色「登录」按钮，系统验证通过后自动跳转至控制台首页。</li>
+</ol>
+
+<!-- 三、搜索人才完整流程 -->
+<h1>三、搜索人才完整流程</h1>
+
+<h2>3.1 进入搜索页面</h2>
+<p>登录成功后，有两种方式进入人才搜索页面：</p>
+<ol>
+  <li><strong>方式一</strong>：点击左侧侧边栏的「人才搜索」按钮（🌐 Globe 图标），直接跳转至 <code>/searches</code> 页面；</li>
+  <li><strong>方式二</strong>：点击首页（Hero Section）的「开始搜索人才」CTA 按钮，跳转至 <code>/searches</code>。</li>
+</ol>
+
+<h2>3.2 输入搜索条件</h2>
+<p>搜索页面顶部提供以下筛选条件：</p>
+<ol>
+  <li><strong>关键词输入框</strong>：输入技术方向，如「wind turbine」「solid state battery」「BMS」「复合材料」等；</li>
+  <li><strong>行业筛选</strong>：选择「风能」「锂电」或「全部」；</li>
+  <li><strong>国家/地区</strong>：选择目标国家（中国、德国、丹麦、美国等 12 个选项）；</li>
+  <li><strong>经验年数</strong>：设置最低经验要求（1-20 年滑块）。</li>
+</ol>
+
+<h2>3.3 执行搜索</h2>
+<p>设置完筛选条件后，点击「搜索」按钮（🔍 图标）。系统将：</p>
+<ol>
+  <li>优先调用真实数据源（arXiv API、Crossref API）抓取全球最新研究者信息；</li>
+  <li>若真实数据源不可用，自动回退至本地 102 条模拟人才库；</li>
+  <li>搜索结果按「匹配评分」从高到低排列，评分范围为 0-100 分。</li>
+</ol>
+
+<h2>3.4 查看搜索结果</h2>
+<p>搜索结果以卡片网格形式展示，每张卡片包含：</p>
+<ol>
+  <li>人才姓名与职称；</li>
+  <li>所属机构（大学 / 企业）；</li>
+  <li>国家 / 城市；</li>
+  <li>匹配评分（绿色进度条可视化）；</li>
+  <li>核心亮点标签（最多 3 个）；</li>
+  <li>风险标记（如有）；</li>
+  <li>数据来源标签（🟢 真实数据 / 🟡 本地模拟）。</li>
+</ol>
+
+<h2>3.5 加入对比</h2>
+<p>若需要对多位候选人进行横向对比，可以：</p>
+<ol>
+  <li>在任意候选人卡片上点击「加入对比」按钮；</li>
+  <li>页面底部会出现对比悬浮栏，显示已选人数（最多 4 人）；</li>
+  <li>点击悬浮栏中的「查看对比」按钮，跳转至 <code>/compare</code> 页面；</li>
+  <li>在对比页面中，可以并排查看各位候选人的详细信息，包括评分、亮点、风险、论文数、专利数等维度。</li>
+</ol>
+
+<div class="page-break"></div>
+
+<!-- 四、技术架构说明 -->
+<h1>四、技术架构说明</h1>
+
+<h2>4.1 技术栈</h2>
+<table class="tech-table">
+  <tr>
+    <th>层级</th>
+    <th>技术选型</th>
+  </tr>
+  <tr><td><strong>前端框架</strong></td><td>Next.js 14（App Router）+ React 18 + TypeScript</td></tr>
+  <tr><td><strong>UI 组件</strong></td><td>Tailwind CSS + shadcn/ui + Lucide Icons</td></tr>
+  <tr><td><strong>数据可视化</strong></td><td>Recharts（AreaChart、BarChart、RadarChart）</td></tr>
+  <tr><td><strong>AI 层</strong></td><td>Mock Provider（可切换真实 AI）+ 真实数据抓取层</td></tr>
+  <tr><td><strong>数据源</strong></td><td>arXiv API（预印本）、Crossref API（学术论文）、本地人才库（102 条）</td></tr>
+  <tr><td><strong>认证系统</strong></td><td>JWT + Mock Auth（支持 admin / boss 双账号）</td></tr>
+</table>
+
+<h2>4.2 项目目录结构</h2>
+<pre style="background:#F5F5F5; border:1px solid #DDD; border-radius:6px; padding:16px; font-size:10pt; line-height:1.6; overflow-x:auto;">
+app/            — Next.js App Router 页面路由（54 个页面）
+components/    — React 组件库（tech/ 科技组件、shared/ 公共组件）
+lib/ai/        — AI 抽象层 + 人才数据库 + 真实数据抓取器
+lib/i18n/      — 中英文国际化翻译系统
+lib/services/   — 后端服务层（订阅、用量、通知等）
+prisma/        — 数据库 Schema 定义（User、Candidate、Job 等）
+public/         — 静态资源（图片、图标、字体）
+</pre>
+
+<h2>4.3 本地运行方式（如公网隧道失效）</h2>
+<ol>
+  <li>进入项目目录：<code>cd global-talent-radar</code>；</li>
+  <li>安装依赖：<code>npm install</code>；</li>
+  <li>启动开发服务器：<code>npm run dev</code>；</li>
+  <li>浏览器访问：<code>http://localhost:3000</code>。</li>
+</ol>
+
+<!-- 五、作业提交说明 -->
+<h1>五、作业提交说明</h1>
+<p>本作业以「全球风能锂电人才搜索雷达」平台为载体，展示了 Next.js 全栈开发、AI 数据集成、国际化、角色权限、科技感 UI 设计等综合能力。评审老师可通过上述公网地址直接访问平台，使用提供的测试账号登录后体验完整人才搜索流程。</p>
+
+<div class="signature">
+  <p>—————————————</p>
+  <p>提交人：____________________</p>
+  <p>学号：____________________</p>
+  <p>日期：2026 年 6 月 1 日</p>
+</div>
+
+</body>
+</html>

@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "echo 'Static export mode — skipping prisma generate'",
+    "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.js",
@@ -19,6 +19,7 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "clsx": "^2.1.1",
+    "docx": "^9.7.1",
     "jose": "^5.9.6",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.460.0",

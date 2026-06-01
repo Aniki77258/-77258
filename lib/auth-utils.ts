@@ -96,8 +96,15 @@ function seedMockUsers() {
     {
       id: "u_admin_001",
       name: "系统管理员",
-      email: "admin@globaltalentradar.com",
-      password: "admin123",
+      email: "admin",
+      password: "123456",
+      role: "admin",
+    },
+    {
+      id: "u_boss_001",
+      name: "老板",
+      email: "boss",
+      password: "123456",
       role: "admin",
     },
     {

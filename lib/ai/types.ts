@@ -38,7 +38,7 @@ export interface AIResult<T> {
 
 export type InvitationStyle = "formal" | "concise" | "international" | "headhunter"
 export type QuestionDomain = "general" | "wind" | "lithium" | "management" | "technical"
-export type CurrencyCode = "USD" | "EUR" | "CNY" | "SGD" | "JPY"
+export type CurrencyCode = "USD" | "EUR" | "CNY" | "SGD" | "JPY" | "KRW"
 export type RiskLevel = "low" | "medium" | "high" | "critical"
 export type OfferRecommendation = "strong_hire" | "hire" | "consider" | "not_recommend"
 
@@ -131,6 +131,7 @@ export interface SalaryBreakdown {
   baseMax: number
   bonusMin: number
   bonusMax: number
+  benefitValue?: number
   equityMin?: number
   equityMax?: number
   benefits: string[]

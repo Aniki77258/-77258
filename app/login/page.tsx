@@ -26,7 +26,7 @@ function LoginForm() {
   const { t, language, toggleLanguage } = useLanguage()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get("redirect") || "/dashboard"
+  const redirectTo = searchParams.get("redirect") || "/"
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -162,7 +162,7 @@ function LoginForm() {
                 <div>
                   <label className="block text-white/80 text-sm mb-1.5 font-medium">{t('auth.email')}</label>
                   <input
-                    type="email"
+                    type="text"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="your@email.com"
