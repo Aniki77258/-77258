@@ -175,6 +175,10 @@ export default function SearchesPage() {
   // 表单提交
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!query.trim()) {
+      setError("请输入搜索关键词，例如：wind turbine, lithium battery, BMS")
+      return
+    }
     doSearch(query, industry)
   }
 
@@ -266,8 +270,8 @@ export default function SearchesPage() {
               </select>
               <button
                 type="submit"
-                disabled={searching || !query.trim()}
-                className="px-6 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm flex items-center gap-2 transition-all"
+                disabled={searching}
+                className="px-6 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm flex items-center gap-2 transition-all cursor-pointer"
               >
                 {searching ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
